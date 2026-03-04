@@ -62,7 +62,7 @@ export async function PATCH(
       }),
     ]);
     if (agentEmail) {
-      sendQuotationAcceptedEmail(agentEmail, agentName, clientName, productName, requestId).catch(() => {});
+      await sendQuotationAcceptedEmail(agentEmail, agentName, clientName, productName, requestId);
     }
   } else if (action === "REQUEST_REVISION") {
     await prisma.$transaction([
@@ -81,7 +81,7 @@ export async function PATCH(
       }),
     ]);
     if (agentEmail) {
-      sendRevisionRequestedEmail(agentEmail, agentName, clientName, productName, requestId, revisionNotes ?? "").catch(() => {});
+      await sendRevisionRequestedEmail(agentEmail, agentName, clientName, productName, requestId, revisionNotes ?? "");
     }
   } else if (action === "REJECT") {
     await prisma.$transaction([

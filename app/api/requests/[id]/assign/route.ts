@@ -34,13 +34,13 @@ export async function POST(
     include: { client: { select: { name: true } } },
   });
 
-  sendNewRequestEmail(
+  await sendNewRequestEmail(
     session.user.email!,
     session.user.name ?? "Agent",
     updated.productName,
     updated.id,
     updated.client.name ?? "Client"
-  ).catch(() => {});
+  );
 
   return NextResponse.json({ ok: true, request: updated });
 }

@@ -77,11 +77,17 @@ export async function sendNewRequestEmail(
   requestId: string,
   clientName: string
 ) {
-  if (!process.env.RESEND_API_KEY) return;
+  console.log("[email] sendNewRequestEmail called", { agentEmail, productName, requestId });
+  console.log("[email] RESEND_API_KEY exists:", !!process.env.RESEND_API_KEY);
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY is missing — skipping email");
+    return;
+  }
 
   const link = `${APP_URL}/agent/requests/${requestId}`;
 
-  await resend.emails.send({
+  try {
+  const result = await resend.emails.send({
     from: FROM,
     to: agentEmail,
     subject: `New request assigned: ${productName}`,
@@ -102,6 +108,10 @@ export async function sendNewRequestEmail(
       ${btn("View Request →", link)}
     `),
   });
+  console.log("[email] sendNewRequestEmail sent:", result);
+  } catch (error) {
+    console.error("[email] sendNewRequestEmail error:", error);
+  }
 }
 
 // ─── 2. Agent sends quotation → notify client ─────────────────────────────────
@@ -113,11 +123,17 @@ export async function sendQuotationReceivedEmail(
   requestId: string,
   agentName: string
 ) {
-  if (!process.env.RESEND_API_KEY) return;
+  console.log("[email] sendQuotationReceivedEmail called", { clientEmail, productName, requestId });
+  console.log("[email] RESEND_API_KEY exists:", !!process.env.RESEND_API_KEY);
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY is missing — skipping email");
+    return;
+  }
 
   const link = `${APP_URL}/client/requests/${requestId}`;
 
-  await resend.emails.send({
+  try {
+  const result = await resend.emails.send({
     from: FROM,
     to: clientEmail,
     subject: `Your quotation is ready: ${productName}`,
@@ -139,6 +155,10 @@ export async function sendQuotationReceivedEmail(
       ${btn("Review Quotation →", link)}
     `),
   });
+  console.log("[email] sendQuotationReceivedEmail sent:", result);
+  } catch (error) {
+    console.error("[email] sendQuotationReceivedEmail error:", error);
+  }
 }
 
 // ─── 3. Client accepts quotation → notify agent ───────────────────────────────
@@ -150,11 +170,17 @@ export async function sendQuotationAcceptedEmail(
   productName: string,
   requestId: string
 ) {
-  if (!process.env.RESEND_API_KEY) return;
+  console.log("[email] sendQuotationAcceptedEmail called", { agentEmail, productName, requestId });
+  console.log("[email] RESEND_API_KEY exists:", !!process.env.RESEND_API_KEY);
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY is missing — skipping email");
+    return;
+  }
 
   const link = `${APP_URL}/agent/requests/${requestId}`;
 
-  await resend.emails.send({
+  try {
+  const result = await resend.emails.send({
     from: FROM,
     to: agentEmail,
     subject: `Quotation accepted: ${productName}`,
@@ -177,6 +203,10 @@ export async function sendQuotationAcceptedEmail(
       ${btn("View Request →", link)}
     `),
   });
+  console.log("[email] sendQuotationAcceptedEmail sent:", result);
+  } catch (error) {
+    console.error("[email] sendQuotationAcceptedEmail error:", error);
+  }
 }
 
 // ─── 4. Client requests revision → notify agent ───────────────────────────────
@@ -189,11 +219,17 @@ export async function sendRevisionRequestedEmail(
   requestId: string,
   revisionNote: string
 ) {
-  if (!process.env.RESEND_API_KEY) return;
+  console.log("[email] sendRevisionRequestedEmail called", { agentEmail, productName, requestId });
+  console.log("[email] RESEND_API_KEY exists:", !!process.env.RESEND_API_KEY);
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY is missing — skipping email");
+    return;
+  }
 
   const link = `${APP_URL}/agent/requests/${requestId}`;
 
-  await resend.emails.send({
+  try {
+  const result = await resend.emails.send({
     from: FROM,
     to: agentEmail,
     subject: `Revision requested: ${productName}`,
@@ -221,4 +257,8 @@ export async function sendRevisionRequestedEmail(
       ${btn("Submit Revised Quotation →", link)}
     `),
   });
+  console.log("[email] sendRevisionRequestedEmail sent:", result);
+  } catch (error) {
+    console.error("[email] sendRevisionRequestedEmail error:", error);
+  }
 }

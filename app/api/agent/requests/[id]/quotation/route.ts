@@ -59,13 +59,13 @@ export async function POST(
     }),
   ]);
 
-  sendQuotationReceivedEmail(
+  await sendQuotationReceivedEmail(
     request.client.email,
     request.client.name ?? "Client",
     request.productName,
     params.id,
     session.user.name ?? "Your agent"
-  ).catch(() => {});
+  );
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }
