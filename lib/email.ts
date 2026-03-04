@@ -73,6 +73,49 @@ const infoRow = (label: string, value: string) =>
     <td style="padding:8px 0;color:#111827;font-size:13px;font-weight:600;">${value}</td>
   </tr>`;
 
+// ─── Order status timeline helper ────────────────────────────────────────────
+
+const ORDER_STAGES = [
+  { key: "CONFIRMED",       label: "Confirmed"   },
+  { key: "PAYMENT_PENDING", label: "Payment"     },
+  { key: "PAID",            label: "Paid"        },
+  { key: "IN_PRODUCTION",   label: "Production"  },
+  { key: "SHIPPED",         label: "Shipped"     },
+  { key: "DELIVERED",       label: "Delivered"   },
+];
+
+const orderTimeline = (currentStatus: string): string => {
+  const currentIdx = ORDER_STAGES.findIndex((s) => s.key === currentStatus);
+  const cells = ORDER_STAGES.map((stage, idx) => {
+    const isDone    = idx < currentIdx;
+    const isCurrent = idx === currentIdx;
+    const bg        = isDone ? "#16a34a" : isCurrent ? "#c9a84c" : "#e5e7eb";
+    const color     = isDone ? "#16a34a" : isCurrent ? "#b8860b" : "#9ca3af";
+    const mark      = isDone ? "&#10003;" : isCurrent ? "&#9679;" : "";
+    const fw        = isCurrent ? "700" : "400";
+    return `
+      <td align="center" style="width:${100 / ORDER_STAGES.length}%;padding:0 2px;vertical-align:top;">
+        <div style="width:30px;height:30px;border-radius:50%;background:${bg};margin:0 auto;
+                    text-align:center;line-height:30px;font-size:12px;color:#fff;font-weight:700;">${mark}</div>
+        <p style="margin:5px 0 0;font-size:9px;color:${color};font-weight:${fw};
+                  text-align:center;line-height:1.3;">${stage.label}</p>
+      </td>`;
+  }).join("");
+  return `
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+      <tr>${cells}</tr>
+    </table>`;
+};
+
+const STATUS_META: Record<string, { label: string; color: string; message: string }> = {
+  CONFIRMED:       { label: "Confirmed",       color: "#0f2044", message: "Your order has been confirmed and is being processed." },
+  PAYMENT_PENDING: { label: "Payment Pending", color: "#d97706", message: "Please arrange payment to proceed. Once received, we&rsquo;ll start immediately." },
+  PAID:            { label: "Payment Confirmed", color: "#16a34a", message: "Payment confirmed &mdash; your order is now being processed." },
+  IN_PRODUCTION:   { label: "In Production",  color: "#7c3aed", message: "Your products are now being manufactured. We&rsquo;ll notify you once shipped." },
+  SHIPPED:         { label: "Shipped",         color: "#2563eb", message: "Your order is on its way! Track your shipment using the details below." },
+  DELIVERED:       { label: "Delivered",       color: "#16a34a", message: "Your order has been delivered. Thank you for choosing RUYA!" },
+};
+
 // ─── 1. Agent picks up a request ─────────────────────────────────────────────
 
 export async function sendNewRequestEmail(
@@ -211,6 +254,113 @@ export async function sendQuotationAcceptedEmail(
   console.log("[email] sendQuotationAcceptedEmail sent:", result);
   } catch (error) {
     console.error("[email] sendQuotationAcceptedEmail error:", error);
+  }
+}
+
+// ─── 5. Order status update → notify client ──────────────────────────────────
+
+export async function sendOrderStatusUpdateEmail(
+  clientEmail: string,
+  clientName: string,
+  productName: string,
+  newStatus: string,
+  orderId: string,
+  trackingNumber?: string | null
+) {
+  console.log("[email] sendOrderStatusUpdateEmail called", { clientEmail, productName, orderId, newStatus });
+  console.log("[email] RESEND_API_KEY exists:", !!process.env.RESEND_API_KEY);
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY is missing — skipping email");
+    return;
+  }
+
+  const meta   = STATUS_META[newStatus] ?? { label: newStatus.replace(/_/g, " "), color: "#0f2044", message: "Your order status has been updated." };
+  const link   = `${APP_URL}/client/orders/${orderId}`;
+  const shortId = orderId.slice(-8).toUpperCase();
+
+  const trackingBlock = (newStatus === "SHIPPED" || newStatus === "DELIVERED") && trackingNumber
+    ? `<div style="margin:16px 0;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px 20px;">
+        <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:0.5px;">Tracking Number</p>
+        <p style="margin:0;font-size:15px;font-family:monospace;font-weight:700;color:#1e40af;">${trackingNumber}</p>
+      </div>`
+    : "";
+
+  try {
+    const result = await resend.emails.send({
+      from: FROM,
+      to: resolveRecipient(clientEmail),
+      subject: `Order #${shortId} update: ${meta.label}`,
+      html: base(`
+        <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${clientName} 👋</p>
+        <h2 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#0f2044;">Your order has been updated</h2>
+        ${badge(meta.label, meta.color)}
+        <p style="margin:16px 0 4px;font-size:14px;color:#374151;line-height:1.6;">${meta.message}</p>
+        ${trackingBlock}
+        ${orderTimeline(newStatus)}
+        <table cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;width:100%;margin-top:8px;">
+          <tbody>
+            ${infoRow("Order ID", `#${shortId}`)}
+            ${infoRow("Product", productName)}
+            ${infoRow("New Status", meta.label)}
+          </tbody>
+        </table>
+        ${btn("Track Your Order →", link)}
+      `),
+    });
+    console.log("[email] sendOrderStatusUpdateEmail sent:", result);
+  } catch (error) {
+    console.error("[email] sendOrderStatusUpdateEmail error:", error);
+  }
+}
+
+// ─── 6. Order status update → internal admin alert ───────────────────────────
+
+export async function sendOrderStatusAdminAlert(
+  productName: string,
+  newStatus: string,
+  orderId: string,
+  clientName: string,
+  agentName: string
+) {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (!adminEmail) {
+    console.log("[email] ADMIN_EMAIL not set — skipping admin alert");
+    return;
+  }
+  console.log("[email] sendOrderStatusAdminAlert called", { orderId, newStatus });
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY is missing — skipping email");
+    return;
+  }
+
+  const meta    = STATUS_META[newStatus] ?? { label: newStatus.replace(/_/g, " "), color: "#0f2044" };
+  const link    = `${APP_URL}/agent/orders/${orderId}`;
+  const shortId = orderId.slice(-8).toUpperCase();
+
+  try {
+    const result = await resend.emails.send({
+      from: FROM,
+      to: resolveRecipient(adminEmail),
+      subject: `[Admin] Order #${shortId} → ${meta.label}`,
+      html: base(`
+        <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Internal alert</p>
+        <h2 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#0f2044;">Order Status Changed</h2>
+        ${badge(meta.label, meta.color)}
+        <table cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;width:100%;margin-top:20px;">
+          <tbody>
+            ${infoRow("Order ID",   `#${shortId}`)}
+            ${infoRow("Product",    productName)}
+            ${infoRow("New Status", meta.label)}
+            ${infoRow("Client",     clientName)}
+            ${infoRow("Agent",      agentName)}
+          </tbody>
+        </table>
+        ${btn("View Order →", link)}
+      `),
+    });
+    console.log("[email] sendOrderStatusAdminAlert sent:", result);
+  } catch (error) {
+    console.error("[email] sendOrderStatusAdminAlert error:", error);
   }
 }
 

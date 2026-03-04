@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendOrderStatusUpdateEmail, sendOrderStatusAdminAlert } from "@/lib/email";
 
 const VALID_STATUSES = [
   "CONFIRMED",
@@ -23,7 +24,11 @@ export async function PUT(
 
   const order = await prisma.order.findUnique({
     where: { id: params.id },
-    include: { quotation: { select: { agentId: true } } },
+    include: {
+      quotation: { select: { agentId: true, agent: { select: { name: true } } } },
+      client:   { select: { email: true, name: true } },
+      request:  { select: { productName: true } },
+    },
   });
 
   if (!order) {
@@ -51,6 +56,28 @@ export async function PUT(
       shippingMark: shippingMark?.trim() || null,
     },
   });
+
+  const clientEmail   = order.client.email;
+  const clientName    = order.client.name ?? "Client";
+  const productName   = order.request.productName;
+  const agentName     = order.quotation.agent?.name ?? "Agent";
+
+  await sendOrderStatusUpdateEmail(
+    clientEmail,
+    clientName,
+    productName,
+    status,
+    params.id,
+    trackingNumber ?? null
+  );
+
+  await sendOrderStatusAdminAlert(
+    productName,
+    status,
+    params.id,
+    clientName,
+    agentName
+  );
 
   return NextResponse.json({ ok: true, order: updated });
 }
