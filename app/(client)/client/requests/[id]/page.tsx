@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
@@ -119,7 +121,7 @@ export default async function RequestDetailPage({
   } catch {}
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
+    <div className="p-6 max-w-4xl mx-auto space-y-6">
 
       {/* Header */}
       <div>
@@ -165,184 +167,189 @@ export default async function RequestDetailPage({
         </CardContent>
       </Card>
 
-      {/* Two-column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      {/* Request Details — full width */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Package className="h-4 w-4 text-muted-foreground" /> Request Details
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-4 text-sm">
+            <div>
+              <p className="text-xs text-muted-foreground mb-0.5">Service Type</p>
+              <div className="flex items-center gap-1.5 font-medium">
+                <ServiceIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                {request.serviceType.replace(/_/g, " ")}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-0.5">Quantity</p>
+              <p className="font-medium">{request.quantity.toLocaleString()} units</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-0.5">Target Unit Price</p>
+              <p className="font-medium">
+                {request.targetPrice ? formatCurrency(request.targetPrice) : <span className="text-muted-foreground">Not specified</span>}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-0.5">Destination</p>
+              <div className="flex items-center gap-1.5 font-medium">
+                {request.destinationCountry
+                  ? <><MapPin className="h-3.5 w-3.5 text-muted-foreground" />{request.destinationCountry}</>
+                  : <span className="text-muted-foreground">Not specified</span>}
+              </div>
+            </div>
+          </div>
 
-        {/* Left: Request Details (3/5) */}
-        <div className="lg:col-span-3 space-y-6">
-          <Card>
-            <CardHeader className="pb-3">
+          {request.description && (
+            <div className="pt-3 border-t border-border">
+              <p className="text-xs text-muted-foreground mb-1">Description</p>
+              <p className="text-sm whitespace-pre-line">{request.description}</p>
+            </div>
+          )}
+
+          {request.notes && (
+            <div className="pt-3 border-t border-border">
+              <p className="text-xs text-muted-foreground mb-1">Additional Notes</p>
+              <p className="text-sm whitespace-pre-line">{request.notes}</p>
+            </div>
+          )}
+
+          {refImages.length > 0 && (
+            <div className="pt-3 border-t border-border">
+              <p className="text-xs text-muted-foreground mb-2">Reference Images</p>
+              <div className="space-y-1.5">
+                {refImages.map((url, i) => (
+                  <a
+                    key={i}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-xs text-primary hover:underline truncate"
+                  >
+                    <ExternalLink className="h-3 w-3 shrink-0" />
+                    {url}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Quotation section — full width, always visible */}
+      {quotation ? (
+        <Card className="border-2 border-primary/20 bg-primary/5">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
-                <Package className="h-4 w-4 text-muted-foreground" /> Request Details
+                <DollarSign className="h-4 w-4 text-primary" />
+                Quotation from Agent
               </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">v{quotation.version}</span>
+                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusColor(quotation.status)}`}>
+                  {quotation.status.replace(/_/g, " ")}
+                </span>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-5">
 
-              {/* Key fields grid */}
-              <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-0.5">Service Type</p>
-                  <div className="flex items-center gap-1.5 font-medium">
-                    <ServiceIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                    {request.serviceType.replace(/_/g, " ")}
+            {/* Supplier */}
+            {(quotation.supplierName || quotation.supplierLocation) && (
+              <div className="rounded-lg bg-background border border-border px-4 py-3 text-sm">
+                <p className="text-xs text-muted-foreground mb-1">Supplier</p>
+                {quotation.supplierName && <p className="font-semibold text-base">{quotation.supplierName}</p>}
+                {quotation.supplierLocation && (
+                  <p className="flex items-center gap-1 text-muted-foreground mt-0.5">
+                    <MapPin className="h-3 w-3" />{quotation.supplierLocation}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Pricing — grid layout */}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Pricing Breakdown</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="rounded-lg bg-background border border-border px-4 py-3 text-sm">
+                  <p className="text-xs text-muted-foreground mb-1">Unit Price</p>
+                  <p className="text-lg font-bold">{formatCurrency(quotation.unitPrice)}</p>
+                </div>
+                <div className="rounded-lg bg-background border border-border px-4 py-3 text-sm">
+                  <p className="text-xs text-muted-foreground mb-1">Qty × {request.quantity.toLocaleString()}</p>
+                  <p className="text-lg font-bold">{formatCurrency(quotation.totalPrice)}</p>
+                </div>
+                {quotation.shippingCostEstimate != null && (
+                  <div className="rounded-lg bg-background border border-border px-4 py-3 text-sm">
+                    <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><Truck className="h-3 w-3" />Shipping Est.</p>
+                    <p className="text-lg font-bold">{formatCurrency(quotation.shippingCostEstimate)}</p>
                   </div>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-0.5">Quantity</p>
-                  <p className="font-medium">{request.quantity.toLocaleString()} units</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-0.5">Target Unit Price</p>
-                  <p className="font-medium">
-                    {request.targetPrice ? formatCurrency(request.targetPrice) : <span className="text-muted-foreground">Not specified</span>}
+                )}
+                <div className="rounded-lg bg-primary/10 border border-primary/20 px-4 py-3 text-sm">
+                  <p className="text-xs text-primary font-semibold mb-1 uppercase tracking-wider">Total</p>
+                  <p className="text-lg font-bold text-primary">
+                    {formatCurrency(quotation.totalPrice + (quotation.shippingCostEstimate ?? 0))}
                   </p>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-0.5">Destination</p>
-                  <div className="flex items-center gap-1.5 font-medium">
-                    {request.destinationCountry
-                      ? <><MapPin className="h-3.5 w-3.5 text-muted-foreground" />{request.destinationCountry}</>
-                      : <span className="text-muted-foreground">Not specified</span>}
-                  </div>
-                </div>
               </div>
+            </div>
 
-              {/* Description */}
-              {request.description && (
-                <div className="pt-3 border-t border-border">
-                  <p className="text-xs text-muted-foreground mb-1">Description</p>
-                  <p className="text-sm whitespace-pre-line">{request.description}</p>
+            {/* Lead time + notes row */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              {quotation.estimatedLeadTime != null && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground rounded-lg bg-background border border-border px-4 py-3 flex-1">
+                  <Clock className="h-4 w-4 shrink-0" />
+                  Lead time: <span className="font-semibold text-foreground">{quotation.estimatedLeadTime} days</span>
                 </div>
               )}
-
-              {/* Notes */}
-              {request.notes && (
-                <div className="pt-3 border-t border-border">
-                  <p className="text-xs text-muted-foreground mb-1">Additional Notes</p>
-                  <p className="text-sm whitespace-pre-line">{request.notes}</p>
+              {quotation.notes && (
+                <div className="rounded-lg bg-background border border-border px-4 py-3 text-sm flex-[2]">
+                  <p className="text-xs text-muted-foreground mb-1">Notes from agent</p>
+                  <p className="whitespace-pre-line">{quotation.notes}</p>
                 </div>
               )}
+            </div>
 
-              {/* Reference images */}
-              {refImages.length > 0 && (
-                <div className="pt-3 border-t border-border">
-                  <p className="text-xs text-muted-foreground mb-2">Reference Images</p>
-                  <div className="space-y-1.5">
-                    {refImages.map((url, i) => (
-                      <a
-                        key={i}
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-xs text-primary hover:underline truncate"
-                      >
-                        <ExternalLink className="h-3 w-3 shrink-0" />
-                        {url}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+            {/* Action buttons — only shown for PENDING quotations */}
+            {quotation.status === "PENDING" && (
+              <div className="pt-2 border-t border-primary/20">
+                <p className="text-sm font-medium text-foreground mb-3">Your response</p>
+                <QuotationActions quotationId={quotation.id} status={quotation.status} />
+              </div>
+            )}
 
-        {/* Right: Quotation (2/5) */}
-        <div className="lg:col-span-2 space-y-4">
-          {quotation ? (
-            <Card className="border-border">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-muted-foreground" /> Quotation
-                  </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">v{quotation.version}</span>
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusColor(quotation.status)}`}>
-                      {quotation.status.replace(/_/g, " ")}
-                    </span>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            {/* Non-pending status badge */}
+            {quotation.status !== "PENDING" && (
+              <div className="pt-2 border-t border-border">
+                <QuotationActions quotationId={quotation.id} status={quotation.status} />
+              </div>
+            )}
 
-                {/* Supplier */}
-                {(quotation.supplierName || quotation.supplierLocation) && (
-                  <div className="rounded-lg bg-muted/50 px-4 py-3 text-sm">
-                    <p className="text-xs text-muted-foreground mb-1">Supplier</p>
-                    {quotation.supplierName && <p className="font-semibold">{quotation.supplierName}</p>}
-                    {quotation.supplierLocation && (
-                      <p className="flex items-center gap-1 text-muted-foreground mt-0.5">
-                        <MapPin className="h-3 w-3" />{quotation.supplierLocation}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* Pricing breakdown */}
-                <div className="space-y-2.5 text-sm">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pricing Breakdown</p>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Unit Price</span>
-                    <span className="font-semibold">{formatCurrency(quotation.unitPrice)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Qty × {request.quantity.toLocaleString()}</span>
-                    <span className="font-semibold">{formatCurrency(quotation.totalPrice)}</span>
-                  </div>
-                  {quotation.shippingCostEstimate != null && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground flex items-center gap-1">
-                        <Truck className="h-3.5 w-3.5" /> Shipping Est.
-                      </span>
-                      <span className="font-semibold">{formatCurrency(quotation.shippingCostEstimate)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between pt-2 border-t border-border">
-                    <span className="font-semibold">Total Est. Cost</span>
-                    <span className="font-bold text-base">
-                      {formatCurrency(quotation.totalPrice + (quotation.shippingCostEstimate ?? 0))}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Lead time */}
-                {quotation.estimatedLeadTime != null && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground rounded-lg bg-muted/50 px-3 py-2">
-                    <Clock className="h-4 w-4" />
-                    Lead time: <span className="font-medium text-foreground">{quotation.estimatedLeadTime} days</span>
-                  </div>
-                )}
-
-                {/* Quotation notes */}
-                {quotation.notes && (
-                  <div className="text-sm">
-                    <p className="text-xs text-muted-foreground mb-1">Notes from agent</p>
-                    <p className="text-muted-foreground whitespace-pre-line">{quotation.notes}</p>
-                  </div>
-                )}
-
-                {/* Action buttons */}
-                <div className="pt-2 border-t border-border">
-                  <QuotationActions quotationId={quotation.id} status={quotation.status} />
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
-                  <Clock className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <p className="font-medium text-sm">Awaiting Quotation</p>
-                <p className="text-xs text-muted-foreground mt-1 max-w-48">
-                  An agent will review your request and send a quotation shortly.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-14 text-center">
+            <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center mb-4">
+              <Clock className="h-7 w-7 text-muted-foreground" />
+            </div>
+            <p className="font-semibold text-foreground">
+              {request.status === "SUBMITTED"
+                ? "Waiting for an agent to pick up your request"
+                : request.status === "ASSIGNED"
+                ? "Agent is preparing your quotation"
+                : "Your request is being processed"}
+            </p>
+            <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+              You&apos;ll see the full quotation here as soon as your agent submits it.
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
