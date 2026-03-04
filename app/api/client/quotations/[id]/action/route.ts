@@ -41,22 +41,42 @@ export async function PATCH(
         where: { id: quotation.requestId },
         data: { status: "VALIDATED" },
       }),
+      prisma.order.create({
+        data: {
+          requestId: quotation.requestId,
+          quotationId: params.id,
+          clientId: session.user.id,
+          status: "CONFIRMED",
+        },
+      }),
     ]);
   } else if (action === "REQUEST_REVISION") {
-    await prisma.quotation.update({
-      where: { id: params.id },
-      data: {
-        status: "REVISION_REQUESTED",
-        notes: revisionNotes
-          ? `[Revision requested] ${revisionNotes}`
-          : quotation.notes,
-      },
-    });
+    await prisma.$transaction([
+      prisma.quotation.update({
+        where: { id: params.id },
+        data: {
+          status: "REVISION_REQUESTED",
+          notes: revisionNotes
+            ? `[Revision requested] ${revisionNotes}`
+            : quotation.notes,
+        },
+      }),
+      prisma.sourcingRequest.update({
+        where: { id: quotation.requestId },
+        data: { status: "ASSIGNED" },
+      }),
+    ]);
   } else if (action === "REJECT") {
-    await prisma.quotation.update({
-      where: { id: params.id },
-      data: { status: "REJECTED" },
-    });
+    await prisma.$transaction([
+      prisma.quotation.update({
+        where: { id: params.id },
+        data: { status: "REJECTED" },
+      }),
+      prisma.sourcingRequest.update({
+        where: { id: quotation.requestId },
+        data: { status: "SUBMITTED", assignedAgentId: null },
+      }),
+    ]);
   }
 
   return NextResponse.json({ ok: true });

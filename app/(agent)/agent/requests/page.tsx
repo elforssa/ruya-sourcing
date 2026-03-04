@@ -2,6 +2,8 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate, formatCurrency, getStatusColor } from "@/lib/utils";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 export default async function AgentRequestsPage() {
   const session = await getSession();
@@ -66,11 +68,19 @@ export default async function AgentRequestsPage() {
                     <p className="font-medium">{formatDate(req.createdAt)}</p>
                   </div>
                 </div>
-                {req._count.quotations > 0 && (
-                  <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700">
-                    {req._count.quotations} quotation{req._count.quotations !== 1 ? "s" : ""} sent
-                  </div>
-                )}
+                <div className="mt-4 flex items-center justify-between">
+                  {req._count.quotations > 0 && (
+                    <div className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700">
+                      {req._count.quotations} quotation{req._count.quotations !== 1 ? "s" : ""} sent
+                    </div>
+                  )}
+                  <Link
+                    href={`/agent/requests/${req.id}`}
+                    className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold hover:opacity-90 transition-all"
+                  >
+                    View &amp; Quote <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
               </CardContent>
             </Card>
           ))}
