@@ -4,14 +4,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClipboardList, FileText, TrendingUp, ArrowRight, MapPin, Inbox } from "lucide-react";
 import { formatDate, getStatusColor } from "@/lib/utils";
 import Link from "next/link";
+import AvailableRequestsList from "./AvailableRequestsList";
 
 export default async function AgentDashboard() {
   const session = await getSession();
   if (!session) return null;
 
-  const [assignedRequests, [totalAssigned, totalQuotations, convertedCount]] = await Promise.all([
+  const [assignedRequests, unassignedRequests, [totalAssigned, totalQuotations, convertedCount]] = await Promise.all([
     prisma.sourcingRequest.findMany({
       where: { assignedAgentId: session.user.id },
+      include: { client: { select: { name: true } } },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.sourcingRequest.findMany({
+      where: { assignedAgentId: null, status: { in: ["SUBMITTED", "DRAFT"] } },
       include: { client: { select: { name: true } } },
       orderBy: { createdAt: "desc" },
     }),
@@ -100,13 +106,15 @@ export default async function AgentDashboard() {
         ))}
       </div>
 
-      {/* Assigned Requests Queue */}
+      <AvailableRequestsList initialRequests={unassignedRequests} />
+
+      {/* My Assigned Requests */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-4">
           <div>
-            <CardTitle className="text-base">Assigned Requests Queue</CardTitle>
+            <CardTitle className="text-base">My Assigned Requests</CardTitle>
             <p className="text-sm text-muted-foreground mt-0.5">
-              All requests assigned to you, newest first
+              Requests assigned to you, newest first
             </p>
           </div>
           <Link
@@ -124,7 +132,7 @@ export default async function AgentDashboard() {
               </div>
               <p className="font-medium text-foreground">No requests assigned yet</p>
               <p className="text-sm text-muted-foreground mt-1">
-                New requests will appear here once assigned by an admin.
+                Pick up a request from the Available Requests section above.
               </p>
             </div>
           ) : (
@@ -132,24 +140,12 @@ export default async function AgentDashboard() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-muted/40">
-                    <th className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Client
-                    </th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Product
-                    </th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden md:table-cell">
-                      Destination
-                    </th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden sm:table-cell">
-                      Date
-                    </th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="text-right px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Action
-                    </th>
+                    <th className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Client</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Product</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden md:table-cell">Destination</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden sm:table-cell">Date</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                    <th className="text-right px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -159,30 +155,21 @@ export default async function AgentDashboard() {
                         <p className="font-medium text-foreground">{req.client.name}</p>
                       </td>
                       <td className="px-4 py-4">
-                        <div>
-                          <p className="font-medium text-foreground">{req.productName}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {req.quantity.toLocaleString()} units
-                          </p>
-                        </div>
+                        <p className="font-medium text-foreground">{req.productName}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{req.quantity.toLocaleString()} units</p>
                       </td>
                       <td className="px-4 py-4 hidden md:table-cell">
                         {req.destinationCountry ? (
                           <span className="flex items-center gap-1 text-muted-foreground">
-                            <MapPin className="h-3.5 w-3.5 shrink-0" />
-                            {req.destinationCountry}
+                            <MapPin className="h-3.5 w-3.5 shrink-0" />{req.destinationCountry}
                           </span>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
+                        ) : <span className="text-muted-foreground">—</span>}
                       </td>
                       <td className="px-4 py-4 text-muted-foreground hidden sm:table-cell">
                         {formatDate(req.createdAt)}
                       </td>
                       <td className="px-4 py-4">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusColor(req.status)}`}
-                        >
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusColor(req.status)}`}>
                           {req.status.replace(/_/g, " ")}
                         </span>
                       </td>
