@@ -3,7 +3,7 @@ import { Resend } from "resend";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const FROM = process.env.EMAIL_FROM ?? "RUYA Platform <onboarding@resend.dev>";
-const APP_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
 // During development/testing with Resend free tier, set DEV_EMAIL_TO to your
 // Resend account email to receive all notifications regardless of recipient.
@@ -132,7 +132,7 @@ export async function sendNewRequestEmail(
     return;
   }
 
-  const link = `${APP_URL}/agent/requests/${requestId}`;
+  const link = `${baseUrl}/agent/requests/${requestId}`;
 
   try {
   const result = await resend.emails.send({
@@ -178,7 +178,7 @@ export async function sendQuotationReceivedEmail(
     return;
   }
 
-  const link = `${APP_URL}/client/requests/${requestId}`;
+  const link = `${baseUrl}/client/requests/${requestId}`;
 
   try {
   const result = await resend.emails.send({
@@ -225,7 +225,7 @@ export async function sendQuotationAcceptedEmail(
     return;
   }
 
-  const link = `${APP_URL}/agent/requests/${requestId}`;
+  const link = `${baseUrl}/agent/requests/${requestId}`;
 
   try {
   const result = await resend.emails.send({
@@ -275,7 +275,7 @@ export async function sendOrderStatusUpdateEmail(
   }
 
   const meta   = STATUS_META[newStatus] ?? { label: newStatus.replace(/_/g, " "), color: "#0f2044", message: "Your order status has been updated." };
-  const link   = `${APP_URL}/client/orders/${orderId}`;
+  const link   = `${baseUrl}/client/orders/${orderId}`;
   const shortId = orderId.slice(-8).toUpperCase();
 
   const trackingBlock = (newStatus === "SHIPPED" || newStatus === "DELIVERED") && trackingNumber
@@ -334,7 +334,7 @@ export async function sendOrderStatusAdminAlert(
   }
 
   const meta    = STATUS_META[newStatus] ?? { label: newStatus.replace(/_/g, " "), color: "#0f2044" };
-  const link    = `${APP_URL}/agent/orders/${orderId}`;
+  const link    = `${baseUrl}/agent/orders/${orderId}`;
   const shortId = orderId.slice(-8).toUpperCase();
 
   try {
@@ -381,7 +381,7 @@ export async function sendRevisionRequestedEmail(
     return;
   }
 
-  const link = `${APP_URL}/agent/requests/${requestId}`;
+  const link = `${baseUrl}/agent/requests/${requestId}`;
 
   try {
   const result = await resend.emails.send({
