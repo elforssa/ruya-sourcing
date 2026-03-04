@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendQuotationReceivedEmail } from "@/lib/email";
 
 export async function POST(
   req: NextRequest,
@@ -14,7 +15,10 @@ export async function POST(
 
   const request = await prisma.sourcingRequest.findUnique({
     where: { id: params.id },
-    include: { quotations: { orderBy: { version: "desc" }, take: 1 } },
+    include: {
+      quotations: { orderBy: { version: "desc" }, take: 1 },
+      client: { select: { name: true, email: true } },
+    },
   });
 
   if (!request) {
@@ -54,6 +58,14 @@ export async function POST(
       data: { status: "QUOTATION_SENT" },
     }),
   ]);
+
+  sendQuotationReceivedEmail(
+    request.client.email,
+    request.client.name ?? "Client",
+    request.productName,
+    params.id,
+    session.user.name ?? "Your agent"
+  ).catch(() => {});
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }
