@@ -1,7 +1,11 @@
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { formatDate, formatCurrency, getStatusColor } from "@/lib/utils";
+import Link from "next/link";
+import { ArrowRight, Package } from "lucide-react";
+
+export const dynamic = "force-dynamic";
 
 export default async function AgentOrdersPage() {
   const session = await getSession();
@@ -12,6 +16,7 @@ export default async function AgentOrdersPage() {
     include: {
       request: { select: { productName: true } },
       client: { select: { name: true } },
+      quotation: { select: { totalPrice: true, supplierName: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -25,52 +30,59 @@ export default async function AgentOrdersPage() {
 
       {orders.length === 0 ? (
         <Card>
-          <CardContent className="py-16 text-center text-muted-foreground">
-            No orders yet.
+          <CardContent className="py-20 text-center">
+            <Package className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
+            <p className="text-muted-foreground">No orders yet.</p>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
-          {orders.map((order) => (
-            <Card key={order.id}>
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-base">Order #{order.id.slice(-8).toUpperCase()}</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {order.request.productName} · Client: {order.client.name}
-                    </p>
-                  </div>
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(order.status)}`}>
-                    {order.status.replace(/_/g, " ")}
-                  </span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground text-xs">Carrier</p>
-                    <p className="font-medium">{order.carrier ?? "—"}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">Tracking</p>
-                    <p className="font-medium font-mono">{order.trackingNumber ?? "—"}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">Order Date</p>
-                    <p className="font-medium">{formatDate(order.createdAt)}</p>
-                  </div>
-                </div>
-                {order.shippingMark && (
-                  <div className="mt-3 text-sm">
-                    <span className="text-muted-foreground">Shipping Mark: </span>
-                    <span className="font-mono font-medium">{order.shippingMark}</span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/40">
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Order</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Product</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Client</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Supplier</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Total</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Date</th>
+                    <th className="px-4 py-3" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((order) => (
+                    <tr key={order.id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
+                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
+                        #{order.id.slice(-8).toUpperCase()}
+                      </td>
+                      <td className="px-4 py-3 font-medium">{order.request.productName}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{order.client.name}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{order.quotation.supplierName ?? "—"}</td>
+                      <td className="px-4 py-3 font-semibold">{formatCurrency(order.quotation.totalPrice)}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(order.status)}`}>
+                          {order.status.replace(/_/g, " ")}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{formatDate(order.createdAt)}</td>
+                      <td className="px-4 py-3">
+                        <Link
+                          href={`/agent/orders/${order.id}`}
+                          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                        >
+                          Manage <ArrowRight className="h-3 w-3" />
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

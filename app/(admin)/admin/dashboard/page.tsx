@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, ClipboardList, TrendingUp, CalendarDays } from "lucide-react";
 import RequestsTable from "./RequestsTable";
 import UsersTable from "./UsersTable";
+import OrdersTable from "./OrdersTable";
 
 export default async function AdminDashboard() {
   const session = await getSession();
@@ -19,6 +20,7 @@ export default async function AdminDashboard() {
     agents,
     allRequests,
     allUsers,
+    allOrders,
   ] = await Promise.all([
     prisma.sourcingRequest.count(),
     prisma.sourcingRequest.count({ where: { createdAt: { gte: startOfMonth } } }),
@@ -38,6 +40,20 @@ export default async function AdminDashboard() {
     prisma.user.findMany({
       where: { role: { in: ["CLIENT", "AGENT"] } },
       include: { _count: { select: { sourcingRequests: true, quotations: true } } },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.order.findMany({
+      include: {
+        request: { select: { productName: true } },
+        client: { select: { name: true } },
+        quotation: {
+          select: {
+            totalPrice: true,
+            supplierName: true,
+            agent: { select: { name: true } },
+          },
+        },
+      },
       orderBy: { createdAt: "desc" },
     }),
   ]);
@@ -130,6 +146,22 @@ export default async function AdminDashboard() {
         </CardHeader>
         <CardContent>
           <UsersTable users={allUsers} />
+        </CardContent>
+      </Card>
+
+      {/* Orders */}
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base">Orders</CardTitle>
+              <p className="text-sm text-muted-foreground">All orders across all clients and agents — filter by status.</p>
+            </div>
+            <span className="text-sm font-semibold text-muted-foreground">{allOrders.length} total</span>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <OrdersTable orders={allOrders} />
         </CardContent>
       </Card>
     </div>

@@ -5,6 +5,11 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.EMAIL_FROM ?? "RUYA Platform <onboarding@resend.dev>";
 const APP_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
+// During development/testing with Resend free tier, set DEV_EMAIL_TO to your
+// Resend account email to receive all notifications regardless of recipient.
+const resolveRecipient = (actual: string) =>
+  process.env.DEV_EMAIL_TO ?? actual;
+
 // ─── Shared styles ───────────────────────────────────────────────────────────
 
 const base = (content: string) => `
@@ -89,7 +94,7 @@ export async function sendNewRequestEmail(
   try {
   const result = await resend.emails.send({
     from: FROM,
-    to: agentEmail,
+    to: resolveRecipient(agentEmail),
     subject: `New request assigned: ${productName}`,
     html: base(`
       <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${agentName} 👋</p>
@@ -135,7 +140,7 @@ export async function sendQuotationReceivedEmail(
   try {
   const result = await resend.emails.send({
     from: FROM,
-    to: clientEmail,
+    to: resolveRecipient(clientEmail),
     subject: `Your quotation is ready: ${productName}`,
     html: base(`
       <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${clientName} 👋</p>
@@ -182,7 +187,7 @@ export async function sendQuotationAcceptedEmail(
   try {
   const result = await resend.emails.send({
     from: FROM,
-    to: agentEmail,
+    to: resolveRecipient(agentEmail),
     subject: `Quotation accepted: ${productName}`,
     html: base(`
       <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${agentName} 👋</p>
@@ -231,7 +236,7 @@ export async function sendRevisionRequestedEmail(
   try {
   const result = await resend.emails.send({
     from: FROM,
-    to: agentEmail,
+    to: resolveRecipient(agentEmail),
     subject: `Revision requested: ${productName}`,
     html: base(`
       <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${agentName} 👋</p>

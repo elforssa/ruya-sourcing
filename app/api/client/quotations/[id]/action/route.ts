@@ -43,7 +43,7 @@ export async function PATCH(
   const requestId = quotation.requestId;
 
   if (action === "ACCEPT") {
-    await prisma.$transaction([
+    const [, , newOrder] = await prisma.$transaction([
       prisma.quotation.update({
         where: { id: params.id },
         data: { status: "ACCEPTED" },
@@ -64,6 +64,7 @@ export async function PATCH(
     if (agentEmail) {
       await sendQuotationAcceptedEmail(agentEmail, agentName, clientName, productName, requestId);
     }
+    return NextResponse.json({ ok: true, orderId: newOrder.id });
   } else if (action === "REQUEST_REVISION") {
     await prisma.$transaction([
       prisma.quotation.update({

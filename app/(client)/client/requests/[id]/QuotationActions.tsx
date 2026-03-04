@@ -22,9 +22,11 @@ export default function QuotationActions({ quotationId, status }: { quotationId:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, revisionNotes: action === "REQUEST_REVISION" ? revisionNotes : undefined }),
       });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Action failed");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Action failed");
+      if (action === "ACCEPT" && data.orderId) {
+        router.push(`/client/orders/${data.orderId}`);
+        return;
       }
       router.refresh();
     } catch (err) {
