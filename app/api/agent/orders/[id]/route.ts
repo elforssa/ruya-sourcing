@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendOrderStatusUpdateEmail, sendOrderStatusAdminAlert } from "@/lib/email";
+import { createNotification } from "@/lib/notifications";
 
 const VALID_STATUSES = [
   "CONFIRMED",
@@ -77,6 +78,14 @@ export async function PUT(
     params.id,
     clientName,
     agentName
+  );
+
+  await createNotification(
+    order.clientId,
+    `Order update: ${status.replace(/_/g, " ")}`,
+    `Your order for "${productName}" has been updated to ${status.replace(/_/g, " ").toLowerCase()}.`,
+    "ORDER_UPDATE",
+    `/client/orders/${params.id}`
   );
 
   return NextResponse.json({ ok: true, order: updated });

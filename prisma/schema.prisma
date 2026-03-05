@@ -28,6 +28,19 @@ model User {
   assignedRequests SourcingRequest[] @relation("AgentRequests")
   quotations      Quotation[]
   orders          Order[]
+  notifications   Notification[]
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String
+  isRead    Boolean  @default(false)
+  link      String?
 }
 
 model Account {

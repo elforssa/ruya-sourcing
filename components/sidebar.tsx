@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
+import { NotificationBell } from "@/components/notification-bell";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 
@@ -162,8 +163,9 @@ export function Sidebar({ role }: { role: "CLIENT" | "AGENT" | "ADMIN" }) {
 
   const sidebarContent = (
     <>
-      <div className="flex h-16 items-center border-b border-sidebar-border px-5">
+      <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-5">
         <RuyaLogo />
+        <NotificationBell />
       </div>
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <NavLinks nav={nav} pathname={pathname} onNavigate={() => setMobileOpen(false)} />
@@ -182,13 +184,16 @@ export function Sidebar({ role }: { role: "CLIENT" | "AGENT" | "ADMIN" }) {
       {/* ── Mobile top bar ── */}
       <header className="md:hidden fixed top-0 inset-x-0 z-40 flex h-14 items-center justify-between border-b border-sidebar-border bg-sidebar text-sidebar-foreground px-4">
         <RuyaLogo />
-        <button
-          onClick={() => setMobileOpen(true)}
-          className="rounded-lg p-2 hover:bg-sidebar-accent/60 transition-colors"
-          aria-label="Open menu"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-1">
+          <NotificationBell />
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="rounded-lg p-2 hover:bg-sidebar-accent/60 transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        </div>
       </header>
 
       {/* ── Mobile drawer overlay ── */}

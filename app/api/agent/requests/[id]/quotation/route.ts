@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendQuotationReceivedEmail } from "@/lib/email";
+import { createNotification } from "@/lib/notifications";
 
 export async function POST(
   req: NextRequest,
@@ -68,6 +69,16 @@ export async function POST(
     params.id,
     session.user.name ?? "Your agent",
     isRevision
+  );
+
+  await createNotification(
+    request.clientId,
+    isRevision ? "Revised quotation received" : "New quotation received",
+    isRevision
+      ? `Your agent submitted a revised quotation for "${request.productName}". Review the updated pricing.`
+      : `Your agent submitted a quotation for "${request.productName}". Review and respond.`,
+    "QUOTATION_SENT",
+    `/client/requests/${params.id}`
   );
 
   return NextResponse.json({ ok: true }, { status: 201 });

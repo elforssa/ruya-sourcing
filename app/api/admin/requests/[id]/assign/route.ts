@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { createNotification } from "@/lib/notifications";
 
 export async function PATCH(
   req: NextRequest,
@@ -19,13 +20,21 @@ export async function PATCH(
     return NextResponse.json({ error: "Agent not found" }, { status: 404 });
   }
 
-  await prisma.sourcingRequest.update({
+  const request = await prisma.sourcingRequest.update({
     where: { id: params.id },
     data: {
       assignedAgentId: agentId,
       status: "ASSIGNED",
     },
   });
+
+  await createNotification(
+    agentId,
+    "New request assigned",
+    `Admin assigned you to the sourcing request for "${request.productName}". Please prepare a quotation.`,
+    "NEW_REQUEST",
+    `/agent/requests/${params.id}`
+  );
 
   return NextResponse.json({ ok: true });
 }

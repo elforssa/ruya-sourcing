@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { createNotification } from "@/lib/notifications";
 
 export async function POST(
   req: NextRequest,
@@ -31,6 +32,14 @@ export async function POST(
       status: "ASSIGNED",
     },
   });
+
+  await createNotification(
+    session.user.id,
+    "New request assigned",
+    `You picked up the request for "${request.productName}". Start preparing your quotation.`,
+    "NEW_REQUEST",
+    `/agent/requests/${params.id}`
+  );
 
   return NextResponse.json({ ok: true });
 }
