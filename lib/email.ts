@@ -465,3 +465,42 @@ export async function sendRevisionRequestedEmail(
     console.error("[email] sendRevisionRequestedEmail error:", error);
   }
 }
+
+// ─── 7. Password reset ────────────────────────────────────────────────────────
+
+export async function sendPasswordResetEmail(
+  email: string,
+  name: string,
+  resetLink: string
+) {
+  console.log("[email] sendPasswordResetEmail called", { email });
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY is missing — skipping email");
+    return;
+  }
+  try {
+    const result = await resend.emails.send({
+      from: FROM,
+      to: resolveRecipient(email),
+      subject: "Reset your RUYA password",
+      html: base(`
+        <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${name} 👋</p>
+        <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#0f2044;">Reset your password</h2>
+        <p style="margin:0 0 24px;font-size:14px;color:#374151;line-height:1.7;">
+          We received a request to reset the password for your RUYA account. Click the button below to choose a new password.
+        </p>
+        ${btn("Reset Password →", resetLink)}
+        <p style="margin:28px 0 0;font-size:12px;color:#9ca3af;line-height:1.6;">
+          This link expires in <strong>1 hour</strong>. If you didn't request a password reset, you can safely ignore this email — your password will not change.
+        </p>
+        <p style="margin:8px 0 0;font-size:11px;color:#d1d5db;">
+          If the button doesn't work, copy and paste this link into your browser:<br/>
+          <span style="color:#6b7280;word-break:break-all;">${resetLink}</span>
+        </p>
+      `),
+    });
+    console.log("[email] sendPasswordResetEmail sent:", result);
+  } catch (error) {
+    console.error("[email] sendPasswordResetEmail error:", error);
+  }
+}

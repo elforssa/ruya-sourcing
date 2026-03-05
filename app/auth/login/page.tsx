@@ -22,6 +22,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const verified = searchParams.get("verified") === "true";
   const tokenError = searchParams.get("error");
+  const reset = searchParams.get("reset") === "true";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -103,6 +104,17 @@ function LoginForm() {
             Sign in to access your sourcing dashboard
           </p>
 
+          {/* Password reset success banner */}
+          {reset && (
+            <div
+              className="flex items-center gap-2 rounded-lg px-4 py-3 mb-5 text-sm"
+              style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", color: "#86efac" }}
+            >
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              Password reset successfully. Please sign in.
+            </div>
+          )}
+
           {/* Email verified success banner */}
           {verified && (
             <div
@@ -172,6 +184,17 @@ function LoginForm() {
                 onFocus={(e) => (e.target.style.borderColor = "rgba(201,168,76,0.6)")}
                 onBlur={(e) => (e.target.style.borderColor = "rgba(201,168,76,0.2)")}
               />
+              <div className="flex justify-end mt-1.5">
+                <a
+                  href="/auth/forgot-password"
+                  className="text-xs transition-colors"
+                  style={{ color: "rgba(201,168,76,0.6)" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(201,168,76,1)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(201,168,76,0.6)")}
+                >
+                  Forgot your password?
+                </a>
+              </div>
             </div>
 
             {/* Error */}
