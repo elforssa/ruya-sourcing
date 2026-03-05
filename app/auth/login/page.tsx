@@ -20,9 +20,10 @@ function redirectByRole(role: string | undefined, router: ReturnType<typeof useR
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const verified = searchParams.get("verified") === "true";
-  const tokenError = searchParams.get("error");
-  const reset = searchParams.get("reset") === "true";
+  const verified   = searchParams.get("verified") === "true";
+  const tokenError  = searchParams.get("error");
+  const isSuspended = tokenError === "suspended";
+  const reset       = searchParams.get("reset") === "true";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -45,7 +46,11 @@ function LoginForm() {
     });
 
     if (!result?.ok) {
-      setError("Invalid email or password. Please try again.");
+      if (result?.error === "ACCOUNT_SUSPENDED") {
+        setError("Your account has been suspended. Contact support@ruya-sourcing.com");
+      } else {
+        setError("Invalid email or password. Please try again.");
+      }
       setLoading(false);
       return;
     }
@@ -126,8 +131,24 @@ function LoginForm() {
             </div>
           )}
 
+          {/* Suspended account banner */}
+          {isSuspended && (
+            <div
+              className="flex items-start gap-2 rounded-lg px-4 py-3 mb-5 text-sm"
+              style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", color: "#fca5a5" }}
+            >
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>
+                Your account has been suspended.{" "}
+                <a href="mailto:support@ruya-sourcing.com" style={{ color: "#fca5a5", textDecoration: "underline" }}>
+                  Contact support@ruya-sourcing.com
+                </a>
+              </span>
+            </div>
+          )}
+
           {/* Token error banner */}
-          {tokenError && TOKEN_ERROR_MESSAGES[tokenError] && (
+          {!isSuspended && tokenError && TOKEN_ERROR_MESSAGES[tokenError] && (
             <div
               className="flex items-center gap-2 rounded-lg px-4 py-3 mb-5 text-sm"
               style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", color: "#fca5a5" }}

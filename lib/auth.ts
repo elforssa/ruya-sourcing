@@ -42,6 +42,10 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials");
         }
 
+        if (!user.isActive) {
+          throw new Error("ACCOUNT_SUSPENDED");
+        }
+
         return {
           id: user.id,
           email: user.email,
@@ -59,6 +63,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = (user as { role: string }).role;
         token.emailVerified = (user as { emailVerified?: Date | null }).emailVerified ?? null;
+        token.isActive = (user as { isActive?: boolean }).isActive ?? true;
       }
       return token;
     },
@@ -67,6 +72,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
         session.user.emailVerified = token.emailVerified as Date | null;
+        session.user.isActive = token.isActive as boolean ?? true;
       }
       return session;
     },

@@ -589,6 +589,44 @@ export async function sendInvoiceEmail(
   }
 }
 
+// ─── 10. Agent welcome email ──────────────────────────────────────────────────
+
+export async function sendAgentWelcomeEmail(
+  agentEmail: string,
+  agentName: string,
+  tempPassword: string
+) {
+  if (!process.env.RESEND_API_KEY) return;
+  const baseUrl = process.env.NEXTAUTH_URL || "https://ruya-platform-tau.vercel.app";
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: resolveRecipient(agentEmail),
+      subject: "Welcome to RUYA — Your agent account is ready",
+      html: base(`
+        <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${agentName} 👋</p>
+        <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f2044;">Welcome to RUYA</h2>
+        ${badge("Agent Account Created", "#7c3aed")}
+        <p style="margin:16px 0 20px;font-size:14px;color:#374151;line-height:1.6;">
+          An agent account has been created for you on the RUYA Global Sourcing Platform.
+          Use the credentials below to sign in and start managing sourcing requests.
+        </p>
+        <div style="margin:0 0 20px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;">
+          <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Your Login Credentials</p>
+          ${infoRow("Email", agentEmail)}
+          ${infoRow("Temporary Password", tempPassword)}
+        </div>
+        <p style="margin:0 0 20px;font-size:13px;color:#6b7280;">
+          Please change your password after your first login.
+        </p>
+        ${btn("Sign In to RUYA →", `${baseUrl}/auth/login`)}
+      `),
+    });
+  } catch (e) {
+    console.error("[email] sendAgentWelcomeEmail error:", e);
+  }
+}
+
 // ─── 7. Password reset ────────────────────────────────────────────────────────
 
 export async function sendPasswordResetEmail(

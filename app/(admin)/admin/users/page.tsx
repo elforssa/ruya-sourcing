@@ -1,51 +1,82 @@
+import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatDate } from "@/lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
+import UsersClient from "./UsersClient";
+
+export const dynamic = "force-dynamic";
 
 export default async function AdminUsersPage() {
-  const users = await prisma.user.findMany({
-    include: {
-      _count: {
-        select: { sourcingRequests: true, orders: true },
+  const session = await getSession();
+  if (!session || session.user.role !== "ADMIN") return null;
+
+  const [rawClients, rawAgents] = await Promise.all([
+    prisma.user.findMany({
+      where: { role: "CLIENT" },
+      include: { _count: { select: { sourcingRequests: true, orders: true } } },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.user.findMany({
+      where: { role: "AGENT" },
+      include: {
+        _count: { select: { assignedRequests: true } },
+        quotations: {
+          select: {
+            orders: { where: { status: "DELIVERED" }, select: { id: true } },
+          },
+        },
       },
-    },
-    orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
+
+  type RawClient = (typeof rawClients)[0];
+  type RawAgent  = (typeof rawAgents)[0];
+
+  const clients = rawClients.map((u: RawClient) => ({
+    id:           u.id,
+    name:         u.name,
+    email:        u.email,
+    createdAt:    u.createdAt,
+    isActive:     u.isActive,
+    bannedAt:     u.bannedAt,
+    bannedReason: u.bannedReason,
+    _count:       u._count,
+  }));
+
+  const agents = rawAgents.map((u: RawAgent) => {
+    const completedOrdersCount  = u.quotations.reduce((s: number, q: RawAgent["quotations"][0]) => s + q.orders.length, 0);
+    const assignedRequestsCount = u._count.assignedRequests;
+    const conversionRate        = assignedRequestsCount > 0
+      ? Math.round((completedOrdersCount / assignedRequestsCount) * 100)
+      : 0;
+    return {
+      id:                   u.id,
+      name:                 u.name,
+      email:                u.email,
+      createdAt:            u.createdAt,
+      isActive:             u.isActive,
+      bannedAt:             u.bannedAt,
+      bannedReason:         u.bannedReason,
+      assignedRequestsCount,
+      completedOrdersCount,
+      conversionRate,
+    };
   });
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Users</h1>
-        <p className="text-muted-foreground mt-1">All registered platform users.</p>
+    <div className="p-8 max-w-screen-xl mx-auto">
+      <div className="flex items-start justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold">User Management</h1>
+          <p className="text-muted-foreground mt-1">
+            {clients.length} clients · {agents.length} agents
+          </p>
+        </div>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">All Users ({users.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="divide-y">
-            {users.map((user) => (
-              <div key={user.id} className="flex items-center justify-between py-3">
-                <div>
-                  <p className="text-sm font-medium">{user.name ?? "—"}</p>
-                  <p className="text-xs text-muted-foreground">{user.email}</p>
-                </div>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>{user._count.sourcingRequests} requests</span>
-                  <span>{user._count.orders} orders</span>
-                  <span>{formatDate(user.createdAt)}</span>
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                    user.role === "ADMIN" ? "bg-red-100 text-red-800" :
-                    user.role === "AGENT" ? "bg-purple-100 text-purple-800" :
-                    "bg-green-100 text-green-800"
-                  }`}>
-                    {user.role}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
+        <CardContent className="pt-6">
+          <UsersClient clients={clients} agents={agents} />
         </CardContent>
       </Card>
     </div>

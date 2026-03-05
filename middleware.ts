@@ -12,6 +12,12 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/auth/verify-pending", req.url));
   }
 
+  if (token.isActive === false) {
+    const url = new URL("/auth/login", req.url);
+    url.searchParams.set("error", "suspended");
+    return NextResponse.redirect(url);
+  }
+
   return NextResponse.next();
 }
 

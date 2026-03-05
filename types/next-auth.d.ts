@@ -15,6 +15,7 @@ declare module "next-auth" {
       image?: string | null;
       role: string;
       emailVerified?: Date | null;
+      isActive?: boolean;
     };
   }
 }
@@ -24,5 +25,6 @@ declare module "next-auth/jwt" {
     id: string;
     role: string;
     emailVerified?: Date | null;
+    isActive?: boolean;
   }
 }
