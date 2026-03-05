@@ -466,6 +466,129 @@ export async function sendRevisionRequestedEmail(
   }
 }
 
+// ─── 7. Payment receipt submitted → admin ────────────────────────────────────
+
+export async function sendPaymentReceiptNotification(
+  adminEmail: string,
+  clientName: string,
+  productName: string,
+  orderId: string
+) {
+  if (!process.env.RESEND_API_KEY) return;
+  const baseUrl = process.env.NEXTAUTH_URL || "https://ruya-platform-tau.vercel.app";
+  const link = `${baseUrl}/admin/orders/${orderId}`;
+  const shortId = orderId.slice(-8).toUpperCase();
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: resolveRecipient(adminEmail),
+      subject: `Payment receipt submitted: Order #${shortId}`,
+      html: base(`
+        <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f2044;">Payment receipt submitted</h2>
+        ${badge("Awaiting Review", "#d97706")}
+        <p style="margin:16px 0 20px;font-size:14px;color:#374151;line-height:1.6;">
+          <strong>${clientName}</strong> has uploaded a payment receipt for their order of <strong>${productName}</strong>.
+          Please review the receipt and confirm or reject the payment.
+        </p>
+        <table cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;width:100%;margin-bottom:20px;">
+          <tbody>
+            ${infoRow("Client", clientName)}
+            ${infoRow("Product", productName)}
+            ${infoRow("Order ID", `#${shortId}`)}
+          </tbody>
+        </table>
+        ${btn("Review Payment →", link)}
+      `),
+    });
+  } catch (e) {
+    console.error("[email] sendPaymentReceiptNotification error:", e);
+  }
+}
+
+// ─── 8. Payment rejected → client ────────────────────────────────────────────
+
+export async function sendPaymentRejectedEmail(
+  clientEmail: string,
+  clientName: string,
+  productName: string,
+  orderId: string,
+  reason: string
+) {
+  if (!process.env.RESEND_API_KEY) return;
+  const baseUrl = process.env.NEXTAUTH_URL || "https://ruya-platform-tau.vercel.app";
+  const link = `${baseUrl}/client/orders/${orderId}`;
+  const shortId = orderId.slice(-8).toUpperCase();
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: resolveRecipient(clientEmail),
+      subject: `Action required: Payment receipt rejected — Order #${shortId}`,
+      html: base(`
+        <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${clientName} 👋</p>
+        <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f2044;">Payment receipt rejected</h2>
+        ${badge("Action Required", "#dc2626")}
+        <p style="margin:16px 0 8px;font-size:14px;color:#374151;line-height:1.6;">
+          Your payment receipt for <strong>${productName}</strong> could not be verified. Please upload a new receipt.
+        </p>
+        <div style="margin:16px 0;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:16px 20px;">
+          <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#991b1b;text-transform:uppercase;letter-spacing:0.5px;">Reason</p>
+          <p style="margin:0;font-size:14px;color:#374151;">${reason}</p>
+        </div>
+        ${btn("Resubmit Receipt →", link)}
+      `),
+    });
+  } catch (e) {
+    console.error("[email] sendPaymentRejectedEmail error:", e);
+  }
+}
+
+// ─── 9. Invoice / payment confirmed → client ──────────────────────────────────
+
+export async function sendInvoiceEmail(
+  clientEmail: string,
+  clientName: string,
+  productName: string,
+  orderId: string,
+  invoiceBuffer: Buffer
+) {
+  if (!process.env.RESEND_API_KEY) return;
+  const baseUrl = process.env.NEXTAUTH_URL || "https://ruya-platform-tau.vercel.app";
+  const link = `${baseUrl}/client/orders/${orderId}`;
+  const shortId = orderId.slice(-8).toUpperCase();
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: resolveRecipient(clientEmail),
+      subject: `Payment confirmed — Invoice for Order #${shortId}`,
+      html: base(`
+        <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${clientName} 👋</p>
+        <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f2044;">Payment confirmed!</h2>
+        ${badge("Paid", "#16a34a")}
+        <p style="margin:16px 0 20px;font-size:14px;color:#374151;line-height:1.6;">
+          Your payment for <strong>${productName}</strong> has been confirmed. Your invoice is attached to this email.
+          Your order will now move to production.
+        </p>
+        <table cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;width:100%;margin-bottom:20px;">
+          <tbody>
+            ${infoRow("Order ID", `#${shortId}`)}
+            ${infoRow("Product", productName)}
+            ${infoRow("Next step", "Order is now in production")}
+          </tbody>
+        </table>
+        ${btn("Track Your Order →", link)}
+      `),
+      attachments: [
+        {
+          filename: `RUYA-Invoice-${shortId}.pdf`,
+          content: invoiceBuffer,
+        },
+      ],
+    });
+  } catch (e) {
+    console.error("[email] sendInvoiceEmail error:", e);
+  }
+}
+
 // ─── 7. Password reset ────────────────────────────────────────────────────────
 
 export async function sendPasswordResetEmail(

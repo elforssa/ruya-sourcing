@@ -1,14 +1,14 @@
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
+import {
   ShieldCheck, CreditCard, Banknote, Cog, Truck, PackageCheck,
-  MapPin, Clock, Package, ArrowLeft, Download, CheckCircle2,
+  Package, ArrowLeft, User, MapPin, Clock,
 } from "lucide-react";
 import Link from "next/link";
-import PaymentUpload from "./PaymentUpload";
+import AdminPaymentSection from "./AdminPaymentSection";
 
 export const dynamic = "force-dynamic";
 
@@ -21,22 +21,19 @@ const STAGES = [
   { key: "DELIVERED",       label: "Delivered",       icon: PackageCheck },
 ] as const;
 
-function getStageIndex(status: string) {
-  return STAGES.findIndex((s) => s.key === status);
-}
-
-export default async function ClientOrderDetailPage({
+export default async function AdminOrderDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
   const session = await getSession();
-  if (!session) return null;
+  if (!session || session.user.role !== "ADMIN") return null;
 
   const order = await prisma.order.findUnique({
     where: { id: params.id },
     include: {
       request: { select: { productName: true, quantity: true, destinationCountry: true } },
+      client:  { select: { name: true, email: true } },
       quotation: {
         select: {
           supplierName: true,
@@ -48,20 +45,19 @@ export default async function ClientOrderDetailPage({
           agent: { select: { name: true, email: true } },
         },
       },
-      // payment fields selected implicitly (all scalar fields fetched by default)
     },
   });
 
-  if (!order || order.clientId !== session.user.id) notFound();
+  if (!order) notFound();
 
-  const currentIdx = getStageIndex(order.status);
+  const currentIdx = STAGES.findIndex((s) => s.key === order.status);
 
   return (
     <div className="p-8 max-w-4xl mx-auto space-y-6">
 
-      {/* Back link */}
+      {/* Back */}
       <Link
-        href="/client/orders"
+        href="/admin/orders"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="h-4 w-4" /> Back to Orders
@@ -73,12 +69,12 @@ export default async function ClientOrderDetailPage({
           <h1 className="text-2xl font-bold">Order #{order.id.slice(-8).toUpperCase()}</h1>
           <p className="text-muted-foreground mt-1">{order.request.productName}</p>
         </div>
-        <span className="inline-flex items-center rounded-full bg-primary/10 text-primary px-3 py-1 text-sm font-semibold">
+        <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ${getStatusColor(order.status)}`}>
           {order.status.replace(/_/g, " ")}
         </span>
       </div>
 
-      {/* ── TOP: Order Summary ── */}
+      {/* Order Summary */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -129,122 +125,104 @@ export default async function ClientOrderDetailPage({
             <div>
               <p className="text-xs text-muted-foreground mb-1">Shipping Cost</p>
               <p className="font-semibold">
-                {order.quotation.shippingCostEstimate
-                  ? formatCurrency(order.quotation.shippingCostEstimate)
-                  : "—"}
+                {order.quotation.shippingCostEstimate ? formatCurrency(order.quotation.shippingCostEstimate) : "—"}
               </p>
+            </div>
+          </div>
+
+          {/* Parties */}
+          <div className="mt-5 pt-5 border-t grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <User className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Client</p>
+                <p className="font-semibold text-sm">{order.client.name}</p>
+                <p className="text-xs text-muted-foreground">{order.client.email}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+                <User className="h-4 w-4 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Agent</p>
+                <p className="font-semibold text-sm">{order.quotation.agent?.name ?? "—"}</p>
+                <p className="text-xs text-muted-foreground">{order.quotation.agent?.email ?? ""}</p>
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* ── MIDDLE: Status Timeline ── */}
+      {/* Order Progress Timeline */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Order Progress</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="relative flex items-start justify-between">
-            {/* Connector line */}
             <div className="absolute top-5 left-5 right-5 h-0.5 bg-border z-0" />
             <div
               className="absolute top-5 left-5 h-0.5 bg-emerald-500 z-0 transition-all duration-500"
               style={{ width: currentIdx > 0 ? `${(currentIdx / (STAGES.length - 1)) * (100 - (10 / STAGES.length))}%` : "0%" }}
             />
-
             {STAGES.map((stage, idx) => {
               const isDone    = idx < currentIdx;
               const isCurrent = idx === currentIdx;
-              const isUpcoming = idx > currentIdx;
-
               const Icon = stage.icon;
-
               return (
                 <div key={stage.key} className="relative z-10 flex flex-col items-center gap-2" style={{ width: `${100 / STAGES.length}%` }}>
-                  <div
-                    className={`h-10 w-10 rounded-full flex items-center justify-center border-2 transition-all
-                      ${isDone    ? "bg-emerald-500 border-emerald-500 text-white" : ""}
-                      ${isCurrent ? "bg-[#c9a84c] border-[#c9a84c] text-white shadow-lg scale-110" : ""}
-                      ${isUpcoming ? "bg-background border-border text-muted-foreground" : ""}
-                    `}
-                  >
+                  <div className={`h-10 w-10 rounded-full flex items-center justify-center border-2 transition-all
+                    ${isDone    ? "bg-emerald-500 border-emerald-500 text-white" : ""}
+                    ${isCurrent ? "bg-[#c9a84c] border-[#c9a84c] text-white shadow-lg scale-110" : ""}
+                    ${!isDone && !isCurrent ? "bg-background border-border text-muted-foreground" : ""}
+                  `}>
                     <Icon className="h-4 w-4" />
                   </div>
-                  <span
-                    className={`text-xs text-center leading-tight font-medium
-                      ${isDone    ? "text-emerald-600" : ""}
-                      ${isCurrent ? "text-[#c9a84c]" : ""}
-                      ${isUpcoming ? "text-muted-foreground" : ""}
-                    `}
-                  >
+                  <span className={`text-xs text-center leading-tight font-medium
+                    ${isDone    ? "text-emerald-600" : ""}
+                    ${isCurrent ? "text-[#c9a84c]" : ""}
+                    ${!isDone && !isCurrent ? "text-muted-foreground" : ""}
+                  `}>
                     {stage.label}
                   </span>
                 </div>
               );
             })}
           </div>
-
           <p className="mt-6 text-center text-xs text-muted-foreground">
             Order placed on {formatDate(order.createdAt)}
-            {order.quotation.agent.name && ` · Managed by ${order.quotation.agent.name}`}
           </p>
         </CardContent>
       </Card>
 
-      {/* ── Payment Required card ── */}
-      {order.status === "PAYMENT_PENDING" && (
-        <Card className="border-amber-200">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-amber-600" />
-              Payment Required
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Your order is confirmed. Please complete payment to start production.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <PaymentUpload
-              orderId={order.id}
-              totalAmount={order.quotation.totalPrice}
-              existingReceiptUrl={order.paymentReceiptUrl}
-              rejectedReason={order.paymentRejectedReason}
-            />
-          </CardContent>
-        </Card>
-      )}
+      {/* Payment Management */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <CreditCard className="h-4 w-4 text-primary" /> Payment Management
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Review client receipt and confirm or reject payment.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <AdminPaymentSection
+            orderId={order.id}
+            status={order.status}
+            totalAmount={order.quotation.totalPrice}
+            paymentReceiptUrl={order.paymentReceiptUrl}
+            paymentSubmittedAt={order.paymentSubmittedAt}
+            paymentConfirmedAt={order.paymentConfirmedAt}
+            paymentRejectedReason={order.paymentRejectedReason}
+            invoiceUrl={order.invoiceUrl}
+          />
+        </CardContent>
+      </Card>
 
-      {/* ── Invoice download (when PAID) ── */}
-      {order.status !== "PAYMENT_PENDING" && order.invoiceUrl && (
-        <Card className="border-emerald-200 bg-emerald-50/30">
-          <CardContent className="pt-5 pb-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-sm">Payment confirmed</p>
-                  {order.paymentConfirmedAt && (
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(order.paymentConfirmedAt).toLocaleString()}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <a
-                href={order.invoiceUrl}
-                download
-                className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors"
-              >
-                <Download className="h-4 w-4" /> Download Invoice
-              </a>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* ── BOTTOM: Shipping Details (shown when SHIPPED or DELIVERED) ── */}
+      {/* Shipping Details */}
       {(order.status === "SHIPPED" || order.status === "DELIVERED") && (
         <Card className="border-blue-200 bg-blue-50/30">
           <CardHeader className="pb-3">
@@ -260,18 +238,7 @@ export default async function ClientOrderDetailPage({
               </div>
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Tracking Number</p>
-                {order.trackingNumber ? (
-                  <a
-                    href={`https://www.google.com/search?q=${encodeURIComponent(order.trackingNumber)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-mono font-semibold text-primary hover:underline"
-                  >
-                    {order.trackingNumber}
-                  </a>
-                ) : (
-                  <p className="font-semibold">—</p>
-                )}
+                <p className="font-mono font-semibold">{order.trackingNumber ?? "—"}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Est. Delivery</p>

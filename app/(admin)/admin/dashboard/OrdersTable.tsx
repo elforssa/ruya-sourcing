@@ -93,7 +93,7 @@ export default function OrdersTable({ orders }: { orders: Order[] }) {
                   <td className="px-4 py-3 text-muted-foreground">{formatDate(order.createdAt)}</td>
                   <td className="px-4 py-3">
                     <Link
-                      href={`/agent/orders/${order.id}`}
+                      href={`/admin/orders/${order.id}`}
                       className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
                     >
                       View <ArrowRight className="h-3 w-3" />
