@@ -247,6 +247,21 @@ function LoginForm() {
           <p className="text-center mt-4 text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
             All demo accounts use password: <span style={{ color: "rgba(201,168,76,0.5)" }}>password123</span>
           </p>
+
+          <div className="mt-6 pt-5 border-t text-center" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+            <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
+              Don&apos;t have an account?{" "}
+              <a
+                href="/auth/register"
+                className="font-semibold transition-colors"
+                style={{ color: "#C9A84C" }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.8")}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+              >
+                Sign up
+              </a>
+            </p>
+          </div>
         </div>
 
         {/* Footer */}

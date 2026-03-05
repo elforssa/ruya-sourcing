@@ -1,10 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { signOut } from "next-auth/react";
-import { Mail, RefreshCw, LogOut, CheckCircle2, Loader2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { Mail, RefreshCw, LogOut, CheckCircle2, Loader2, ArrowLeft } from "lucide-react";
 
-export default function VerifyPendingPage() {
+function VerifyPendingContent() {
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email");
+  const fromRegister = !!email;
+
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -12,7 +18,11 @@ export default function VerifyPendingPage() {
     setStatus("sending");
     setErrorMsg("");
     try {
-      const res = await fetch("/api/auth/send-verification", { method: "POST" });
+      const res = await fetch("/api/auth/send-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: fromRegister ? JSON.stringify({ email }) : "{}",
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to send");
       setStatus("sent");
@@ -63,8 +73,20 @@ export default function VerifyPendingPage() {
           </div>
 
           <h2 className="text-xl font-bold text-white mb-2">Check your email</h2>
-          <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
-            We sent a verification link to your email address. Click the link to activate your RUYA account.
+          <p className="text-sm mb-1" style={{ color: "rgba(255,255,255,0.5)" }}>
+            We sent a verification link to
+          </p>
+          {email ? (
+            <p className="text-sm font-semibold mb-6" style={{ color: "#C9A84C" }}>
+              {email}
+            </p>
+          ) : (
+            <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
+              your email address.
+            </p>
+          )}
+          <p className="text-xs mb-6" style={{ color: "rgba(255,255,255,0.35)" }}>
+            Click the link in the email to activate your RUYA account. Check your spam folder if you don&apos;t see it.
           </p>
 
           {/* Success state */}
@@ -109,17 +131,30 @@ export default function VerifyPendingPage() {
             )}
           </button>
 
-          {/* Sign out */}
-          <button
-            onClick={() => signOut({ callbackUrl: "/auth/login" })}
-            className="inline-flex items-center gap-1.5 text-sm transition-colors"
-            style={{ color: "rgba(255,255,255,0.35)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.65)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            Wrong email? Sign out
-          </button>
+          {/* Secondary action */}
+          {fromRegister ? (
+            <Link
+              href="/auth/register"
+              className="inline-flex items-center gap-1.5 text-sm transition-colors"
+              style={{ color: "rgba(255,255,255,0.35)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.65)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Wrong email? Go back
+            </Link>
+          ) : (
+            <button
+              onClick={() => signOut({ callbackUrl: "/auth/login" })}
+              className="inline-flex items-center gap-1.5 text-sm transition-colors"
+              style={{ color: "rgba(255,255,255,0.35)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.65)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              Wrong email? Sign out
+            </button>
+          )}
         </div>
 
         <p className="text-center mt-6 text-xs" style={{ color: "rgba(255,255,255,0.15)" }}>
@@ -127,5 +162,13 @@ export default function VerifyPendingPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function VerifyPendingPage() {
+  return (
+    <Suspense fallback={<div />}>
+      <VerifyPendingContent />
+    </Suspense>
   );
 }
