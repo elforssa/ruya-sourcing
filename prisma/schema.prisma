@@ -106,6 +106,7 @@ model Quotation {
   estimatedLeadTime    Int?
   shippingCostEstimate Float?
   notes                String?
+  revisionNote         String?
   status               String          @default("PENDING")
   version              Int             @default(1)
 

@@ -19,6 +19,7 @@ import {
   Clock,
   DollarSign,
   ExternalLink,
+  History,
 } from "lucide-react";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import QuotationActions from "./QuotationActions";
@@ -102,10 +103,7 @@ export default async function RequestDetailPage({
   const request = await prisma.sourcingRequest.findUnique({
     where: { id: params.id },
     include: {
-      quotations: {
-        orderBy: { version: "desc" },
-        take: 1,
-      },
+      quotations: { orderBy: { version: "desc" } },
       agent: { select: { name: true, email: true } },
     },
   });
@@ -113,6 +111,7 @@ export default async function RequestDetailPage({
   if (!request || request.clientId !== session.user.id) notFound();
 
   const quotation = request.quotations[0] ?? null;
+  const previousVersions = request.quotations.slice(1);
   const ServiceIcon = SERVICE_ICONS[request.serviceType] ?? Package;
 
   let refImages: string[] = [];
@@ -314,6 +313,14 @@ export default async function RequestDetailPage({
               )}
             </div>
 
+            {/* Revision note from client (shown when revision was requested) */}
+            {quotation.revisionNote && (
+              <div className="rounded-lg bg-orange-50 border border-orange-200 px-4 py-3 text-sm">
+                <p className="text-xs font-semibold text-orange-700 uppercase tracking-wider mb-1">Your Revision Request</p>
+                <p className="text-orange-900 whitespace-pre-line">{quotation.revisionNote}</p>
+              </div>
+            )}
+
             {/* Action buttons — only shown for PENDING quotations */}
             {quotation.status === "PENDING" && (
               <div className="pt-2 border-t border-primary/20">
@@ -347,6 +354,61 @@ export default async function RequestDetailPage({
             <p className="text-sm text-muted-foreground mt-1 max-w-sm">
               You&apos;ll see the full quotation here as soon as your agent submits it.
             </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Previous quotation versions */}
+      {previousVersions.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <History className="h-4 w-4 text-muted-foreground" />
+              Previous Versions ({previousVersions.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {previousVersions.map((q) => (
+              <div key={q.id} className="rounded-lg border border-border p-4 space-y-3 text-sm">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold bg-muted rounded px-2 py-0.5">v{q.version}</span>
+                    {q.supplierName && <span className="font-medium">{q.supplierName}</span>}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">{formatDate(q.createdAt)}</span>
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${getStatusColor(q.status)}`}>
+                      {q.status.replace(/_/g, " ")}
+                    </span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-3 text-xs">
+                  <div>
+                    <p className="text-muted-foreground">Unit Price</p>
+                    <p className="font-medium">{formatCurrency(q.unitPrice)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Total</p>
+                    <p className="font-medium">{formatCurrency(q.totalPrice)}</p>
+                  </div>
+                  {q.estimatedLeadTime != null && (
+                    <div>
+                      <p className="text-muted-foreground">Lead Time</p>
+                      <p className="font-medium">{q.estimatedLeadTime} days</p>
+                    </div>
+                  )}
+                </div>
+                {q.revisionNote && (
+                  <div className="rounded bg-orange-50 border border-orange-100 px-3 py-2">
+                    <p className="text-xs font-semibold text-orange-700 mb-0.5">Your revision note</p>
+                    <p className="text-xs text-orange-800 whitespace-pre-line">{q.revisionNote}</p>
+                  </div>
+                )}
+                {q.notes && (
+                  <p className="text-xs text-muted-foreground border-t border-border pt-2">{q.notes}</p>
+                )}
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}

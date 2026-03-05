@@ -35,7 +35,9 @@ export async function POST(
     return NextResponse.json({ error: "Unit price is required" }, { status: 400 });
   }
 
-  const prevVersion = request.quotations[0]?.version ?? 0;
+  const prevQuotation = request.quotations[0] ?? null;
+  const prevVersion = prevQuotation?.version ?? 0;
+  const isRevision = prevQuotation?.status === "REVISION_REQUESTED";
 
   await prisma.$transaction([
     prisma.quotation.create({
@@ -64,7 +66,8 @@ export async function POST(
     request.client.name ?? "Client",
     request.productName,
     params.id,
-    session.user.name ?? "Your agent"
+    session.user.name ?? "Your agent",
+    isRevision
   );
 
   return NextResponse.json({ ok: true }, { status: 201 });

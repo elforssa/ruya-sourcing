@@ -76,12 +76,6 @@ export default function QuotationForm({ requestId, quantity, prefill, isRevision
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {isRevision && (
-        <div className="rounded-lg bg-orange-50 border border-orange-200 px-4 py-3 text-sm text-orange-800">
-          The client has requested a revision. Update the fields below and resubmit.
-        </div>
-      )}
-
       {/* Supplier */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>

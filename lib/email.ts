@@ -168,9 +168,10 @@ export async function sendQuotationReceivedEmail(
   clientName: string,
   productName: string,
   requestId: string,
-  agentName: string
+  agentName: string,
+  isRevision = false
 ) {
-  console.log("[email] sendQuotationReceivedEmail called", { clientEmail, productName, requestId });
+  console.log("[email] sendQuotationReceivedEmail called", { clientEmail, productName, requestId, isRevision });
   console.log("[email] RESEND_API_KEY exists:", !!process.env.RESEND_API_KEY);
   if (!process.env.RESEND_API_KEY) {
     console.warn("[email] RESEND_API_KEY is missing — skipping email");
@@ -179,20 +180,24 @@ export async function sendQuotationReceivedEmail(
 
   const baseUrl = process.env.NEXTAUTH_URL || 'https://ruya-platform-tau.vercel.app';
   const link = `${baseUrl}/client/requests/${requestId}`;
+  const subject = isRevision
+    ? `Your revised quotation is ready: ${productName}`
+    : `Your quotation is ready: ${productName}`;
+  const heading = isRevision ? "Your revised quotation is ready" : "Your quotation is ready";
+  const body = isRevision
+    ? `<strong>${agentName}</strong> has submitted a revised quotation for your sourcing request based on your feedback. Review the updated pricing and details.`
+    : `Great news! <strong>${agentName}</strong> has submitted a quotation for your sourcing request. Review the pricing, lead time, and supplier details, then accept, request a revision, or reject.`;
 
   try {
   const result = await resend.emails.send({
     from: FROM,
     to: resolveRecipient(clientEmail),
-    subject: `Your quotation is ready: ${productName}`,
+    subject,
     html: base(`
       <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${clientName} 👋</p>
-      <h2 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#0f2044;">Your quotation is ready</h2>
-      ${badge("Quotation Received", "#c9a84c")}
-      <p style="margin:16px 0 20px;font-size:14px;color:#374151;line-height:1.6;">
-        Great news! <strong>${agentName}</strong> has submitted a quotation for your sourcing request.
-        Review the pricing, lead time, and supplier details, then accept, request a revision, or reject.
-      </p>
+      <h2 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#0f2044;">${heading}</h2>
+      ${badge(isRevision ? "Revised Quotation" : "Quotation Received", "#c9a84c")}
+      <p style="margin:16px 0 20px;font-size:14px;color:#374151;line-height:1.6;">${body}</p>
       <table cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;width:100%;margin-bottom:8px;">
         <tbody>
           ${infoRow("Product", productName)}
@@ -200,7 +205,7 @@ export async function sendQuotationReceivedEmail(
           ${infoRow("Request ID", `#${requestId.slice(-10).toUpperCase()}`)}
         </tbody>
       </table>
-      ${btn("Review Quotation →", link)}
+      ${btn(isRevision ? "Review Revised Quotation →" : "Review Quotation →", link)}
     `),
   });
   console.log("[email] sendQuotationReceivedEmail sent:", result);

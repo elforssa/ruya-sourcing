@@ -237,6 +237,14 @@ export default async function AgentRequestDetailPage({
           )}
 
           {/* Quotation form */}
+          {/* Revision banner — shown above form when client requested changes */}
+          {isRevision && latestQuotation?.revisionNote && (
+            <div className="rounded-xl border border-amber-300 bg-amber-50 px-5 py-4">
+              <p className="text-xs font-bold text-amber-800 uppercase tracking-wider mb-1.5">Client Requested a Revision</p>
+              <p className="text-sm text-amber-900 whitespace-pre-line">{latestQuotation.revisionNote}</p>
+            </div>
+          )}
+
           {canSubmitForm && (
             <Card>
               <CardHeader className="pb-3">

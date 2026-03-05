@@ -71,9 +71,7 @@ export async function PATCH(
         where: { id: params.id },
         data: {
           status: "REVISION_REQUESTED",
-          notes: revisionNotes
-            ? `[Revision requested] ${revisionNotes}`
-            : quotation.notes,
+          revisionNote: revisionNotes?.trim() || null,
         },
       }),
       prisma.sourcingRequest.update({
