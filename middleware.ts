@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 
-export function middleware(req: NextRequest) {
-  const sessionToken =
-    req.cookies.get("next-auth.session-token")?.value ??
-    req.cookies.get("__Secure-next-auth.session-token")?.value;
+export async function middleware(req: NextRequest) {
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
-  if (!sessionToken) {
+  if (!token) {
     return NextResponse.redirect(new URL("/auth/login", req.url));
+  }
+
+  if (!token.emailVerified) {
+    return NextResponse.redirect(new URL("/auth/verify-pending", req.url));
   }
 
   return NextResponse.next();

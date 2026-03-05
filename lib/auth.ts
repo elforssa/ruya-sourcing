@@ -48,6 +48,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           role: user.role,
           image: user.image,
+          emailVerified: user.emailVerified,
         };
       },
     }),
@@ -57,6 +58,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = (user as { role: string }).role;
+        token.emailVerified = (user as { emailVerified?: Date | null }).emailVerified ?? null;
       }
       return token;
     },
@@ -64,6 +66,7 @@ export const authOptions: NextAuthOptions = {
       if (token && session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
+        session.user.emailVerified = token.emailVerified as Date | null;
       }
       return session;
     },

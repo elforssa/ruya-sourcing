@@ -21,6 +21,7 @@ async function main() {
       email: "admin@ruya.com",
       password: hashedPassword,
       role: "ADMIN",
+      emailVerified: new Date(),
     },
   });
 
@@ -30,6 +31,7 @@ async function main() {
       email: "agent@ruya.com",
       password: hashedPassword,
       role: "AGENT",
+      emailVerified: new Date(),
     },
   });
 
@@ -39,6 +41,7 @@ async function main() {
       email: "client@ruya.com",
       password: hashedPassword,
       role: "CLIENT",
+      emailVerified: new Date(),
     },
   });
 

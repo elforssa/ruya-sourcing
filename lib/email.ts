@@ -320,6 +320,45 @@ export async function sendOrderStatusUpdateEmail(
   }
 }
 
+// ─── 0. Email verification ────────────────────────────────────────────────────
+
+export async function sendVerificationEmail(
+  email: string,
+  name: string,
+  verificationLink: string
+) {
+  console.log("[email] sendVerificationEmail called", { email });
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY is missing — skipping email");
+    return;
+  }
+  try {
+    const result = await resend.emails.send({
+      from: FROM,
+      to: resolveRecipient(email),
+      subject: "Verify your RUYA account",
+      html: base(`
+        <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${name} 👋</p>
+        <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#0f2044;">Verify your email address</h2>
+        <p style="margin:0 0 24px;font-size:14px;color:#374151;line-height:1.7;">
+          Thanks for joining RUYA! Please confirm your email address to activate your account and access the platform.
+        </p>
+        ${btn("Verify Email →", verificationLink)}
+        <p style="margin:28px 0 0;font-size:12px;color:#9ca3af;line-height:1.6;">
+          This link expires in <strong>24 hours</strong>. If you didn't create a RUYA account, you can safely ignore this email.
+        </p>
+        <p style="margin:8px 0 0;font-size:11px;color:#d1d5db;">
+          If the button doesn't work, copy and paste this link into your browser:<br/>
+          <span style="color:#6b7280;word-break:break-all;">${verificationLink}</span>
+        </p>
+      `),
+    });
+    console.log("[email] sendVerificationEmail sent:", result);
+  } catch (error) {
+    console.error("[email] sendVerificationEmail error:", error);
+  }
+}
+
 // ─── 6. Order status update → internal admin alert ───────────────────────────
 
 export async function sendOrderStatusAdminAlert(

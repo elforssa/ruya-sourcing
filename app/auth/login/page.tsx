@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { signIn, getSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 
 const DEMO_ACCOUNTS = [
   { label: "Client", email: "client@ruya.com", role: "CLIENT" },
@@ -18,10 +19,19 @@ function redirectByRole(role: string | undefined, router: ReturnType<typeof useR
 
 export default function AuthLoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const verified = searchParams.get("verified") === "true";
+  const tokenError = searchParams.get("error");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const TOKEN_ERROR_MESSAGES: Record<string, string> = {
+    "missing-token": "Verification link is missing. Please request a new one.",
+    "invalid-token": "Verification link is invalid. Please request a new one.",
+    "expired-token": "Verification link has expired. Please request a new one.",
+  };
 
   const attemptSignIn = async (loginEmail: string, loginPassword: string) => {
     setLoading(true);
@@ -89,9 +99,31 @@ export default function AuthLoginPage() {
           }}
         >
           <h2 className="text-lg font-semibold text-white mb-1">Welcome back</h2>
-          <p className="text-sm mb-7" style={{ color: "rgba(255,255,255,0.4)" }}>
+          <p className="text-sm mb-5" style={{ color: "rgba(255,255,255,0.4)" }}>
             Sign in to access your sourcing dashboard
           </p>
+
+          {/* Email verified success banner */}
+          {verified && (
+            <div
+              className="flex items-center gap-2 rounded-lg px-4 py-3 mb-5 text-sm"
+              style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", color: "#86efac" }}
+            >
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              Email verified! You can now sign in.
+            </div>
+          )}
+
+          {/* Token error banner */}
+          {tokenError && TOKEN_ERROR_MESSAGES[tokenError] && (
+            <div
+              className="flex items-center gap-2 rounded-lg px-4 py-3 mb-5 text-sm"
+              style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", color: "#fca5a5" }}
+            >
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {TOKEN_ERROR_MESSAGES[tokenError]}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
