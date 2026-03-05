@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import OrderStatusForm from "./OrderStatusForm";
+import ShippingMarkSection from "./ShippingMarkSection";
 
 export const dynamic = "force-dynamic";
 
@@ -196,6 +197,34 @@ export default async function AgentOrderDetailPage({
           </p>
         </CardContent>
       </Card>
+
+      {/* ── Shipping Mark (shown from IN_PRODUCTION onwards) ── */}
+      {["IN_PRODUCTION", "SHIPPED", "DELIVERED"].includes(order.status) && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Cog className="h-4 w-4 text-primary" /> Shipping Mark
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Prepare and send the shipping mark document to the factory.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <ShippingMarkSection
+              orderId={order.id}
+              initial={{
+                ref:         order.shippingMarkRef,
+                cartons:     order.shippingMarkCartons,
+                netWeight:   order.shippingMarkNetWeight,
+                grossWeight: order.shippingMarkGrossWeight,
+                dimensions:  order.shippingMarkDimensions,
+                notes:       order.shippingMarkNotes,
+                sentAt:      order.shippingMarkSentAt,
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {/* ── BOTTOM: Update Order Status ── */}
       <Card>

@@ -15,10 +15,19 @@ const ALL_STATUSES = [
   "DELIVERED",
 ];
 
+const SHIPPING_MARK_FILTERS = [
+  { value: "ALL_MARKS",   label: "All Mark Status" },
+  { value: "HAS_MARK",    label: "Has Shipping Mark" },
+  { value: "NO_MARK",     label: "No Shipping Mark" },
+  { value: "MARK_SENT",   label: "Mark Sent to Supplier" },
+];
+
 interface Order {
   id: string;
   createdAt: Date;
   status: string;
+  shippingMarkRef: string | null;
+  shippingMarkSentAt: Date | null;
   request: { productName: string };
   client: { name: string | null };
   quotation: {
@@ -29,17 +38,23 @@ interface Order {
 }
 
 export default function OrdersTable({ orders }: { orders: Order[] }) {
-  const [filter, setFilter] = useState("ALL");
+  const [filter,     setFilter]     = useState("ALL");
+  const [markFilter, setMarkFilter] = useState("ALL_MARKS");
 
-  const filtered = filter === "ALL"
-    ? orders
-    : orders.filter((o) => o.status === filter);
+  const filtered = orders
+    .filter((o) => filter === "ALL" || o.status === filter)
+    .filter((o) => {
+      if (markFilter === "HAS_MARK")  return !!o.shippingMarkRef;
+      if (markFilter === "NO_MARK")   return !o.shippingMarkRef;
+      if (markFilter === "MARK_SENT") return !!o.shippingMarkSentAt;
+      return true;
+    });
 
   return (
     <div className="space-y-4">
-      {/* Filter */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">Filter:</span>
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-muted-foreground">Status:</span>
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
@@ -49,6 +64,16 @@ export default function OrdersTable({ orders }: { orders: Order[] }) {
             <option key={s} value={s}>
               {s === "ALL" ? "All Statuses" : s.replace(/_/g, " ")}
             </option>
+          ))}
+        </select>
+        <span className="text-sm text-muted-foreground ml-2">Shipping Mark:</span>
+        <select
+          value={markFilter}
+          onChange={(e) => setMarkFilter(e.target.value)}
+          className="rounded-lg border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+        >
+          {SHIPPING_MARK_FILTERS.map((f) => (
+            <option key={f.value} value={f.value}>{f.label}</option>
           ))}
         </select>
         <span className="text-xs text-muted-foreground ml-auto">
@@ -70,6 +95,7 @@ export default function OrdersTable({ orders }: { orders: Order[] }) {
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Supplier</th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Total</th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Shipping Mark</th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Date</th>
                 <th className="px-4 py-3" />
               </tr>
@@ -89,6 +115,16 @@ export default function OrdersTable({ orders }: { orders: Order[] }) {
                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(order.status)}`}>
                       {order.status.replace(/_/g, " ")}
                     </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {order.shippingMarkRef ? (
+                      <span className="font-mono text-xs text-primary">{order.shippingMarkRef}</span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                    {order.shippingMarkSentAt && (
+                      <span className="ml-1.5 inline-flex items-center rounded-full bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">Sent</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{formatDate(order.createdAt)}</td>
                   <td className="px-4 py-3">

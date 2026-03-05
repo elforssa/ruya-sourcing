@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import PaymentUpload from "./PaymentUpload";
+import ShippingMarkCard from "./ShippingMarkCard";
 
 export const dynamic = "force-dynamic";
 
@@ -240,6 +241,28 @@ export default async function ClientOrderDetailPage({
                 <Download className="h-4 w-4" /> Download Invoice
               </a>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Shipping Mark card (when mark exists) ── */}
+      {order.shippingMarkRef && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Package className="h-4 w-4 text-primary" /> Shipping Mark
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Your shipping mark document has been prepared by your agent.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <ShippingMarkCard
+              orderId={order.id}
+              markRef={order.shippingMarkRef}
+              cartons={order.shippingMarkCartons}
+              sentAt={order.shippingMarkSentAt}
+            />
           </CardContent>
         </Card>
       )}

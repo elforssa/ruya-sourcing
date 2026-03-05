@@ -152,4 +152,11 @@ model Order {
   paymentConfirmedAt    DateTime?
   paymentRejectedReason String?
   invoiceUrl            String?
+  shippingMarkRef          String?
+  shippingMarkCartons      Int?
+  shippingMarkNetWeight    String?
+  shippingMarkGrossWeight  String?
+  shippingMarkDimensions   String?
+  shippingMarkNotes        String?
+  shippingMarkSentAt       DateTime?
 }
