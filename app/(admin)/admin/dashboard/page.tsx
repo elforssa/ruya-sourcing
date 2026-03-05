@@ -1,30 +1,16 @@
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, ClipboardList, TrendingUp, CalendarDays } from "lucide-react";
 import RequestsTable from "./RequestsTable";
 import UsersTable from "./UsersTable";
 import OrdersTable from "./OrdersTable";
+import { AnalyticsSection } from "./AnalyticsSection";
 
 export default async function AdminDashboard() {
   const session = await getSession();
   if (!session) return null;
 
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  const [
-    totalRequests,
-    requestsThisMonth,
-    convertedCount,
-    agents,
-    allRequests,
-    allUsers,
-    allOrders,
-  ] = await Promise.all([
-    prisma.sourcingRequest.count(),
-    prisma.sourcingRequest.count({ where: { createdAt: { gte: startOfMonth } } }),
-    prisma.sourcingRequest.count({ where: { status: { in: ["VALIDATED", "CONVERTED"] } } }),
+  const [agents, allRequests, allUsers, allOrders] = await Promise.all([
     prisma.user.findMany({
       where: { role: "AGENT", isActive: true },
       select: { id: true, name: true },
@@ -58,74 +44,17 @@ export default async function AdminDashboard() {
     }),
   ]);
 
-  const activeAgents = agents.length;
-  const conversionRate = totalRequests > 0
-    ? Math.round((convertedCount / totalRequests) * 100)
-    : 0;
-
-  const kpis = [
-    {
-      label: "Total Requests",
-      value: totalRequests,
-      sub: `${allRequests.filter((r) => r.status === "SUBMITTED").length} awaiting assignment`,
-      icon: ClipboardList,
-      iconBg: "bg-blue-50",
-      iconColor: "text-blue-600",
-    },
-    {
-      label: "Active Agents",
-      value: activeAgents,
-      sub: `${allRequests.filter((r) => !r.agent).length} unassigned requests`,
-      icon: Users,
-      iconBg: "bg-purple-50",
-      iconColor: "text-purple-600",
-    },
-    {
-      label: "Conversion Rate",
-      value: `${conversionRate}%`,
-      sub: `${convertedCount} of ${totalRequests} converted`,
-      icon: TrendingUp,
-      iconBg: "bg-emerald-50",
-      iconColor: "text-emerald-600",
-    },
-    {
-      label: "Requests This Month",
-      value: requestsThisMonth,
-      sub: now.toLocaleDateString("en-US", { month: "long", year: "numeric" }),
-      icon: CalendarDays,
-      iconBg: "bg-orange-50",
-      iconColor: "text-orange-600",
-    },
-  ];
-
   return (
     <div className="p-8 max-w-screen-2xl mx-auto space-y-8">
 
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Platform overview, request management, and user control.</p>
+        <p className="text-muted-foreground mt-1">Platform overview, analytics, and management tools.</p>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpis.map(({ label, value, sub, icon: Icon, iconBg, iconColor }) => (
-          <Card key={label}>
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{label}</p>
-                  <p className="text-3xl font-bold mt-1">{value}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{sub}</p>
-                </div>
-                <div className={`h-12 w-12 rounded-xl ${iconBg} flex items-center justify-center shrink-0`}>
-                  <Icon className={`h-6 w-6 ${iconColor}`} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* Dynamic KPI analytics — date-range aware, client-side */}
+      <AnalyticsSection />
 
       {/* Requests Management */}
       <Card>
