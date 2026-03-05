@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, AlertCircle } from "lucide-react";
@@ -17,7 +17,7 @@ function redirectByRole(role: string | undefined, router: ReturnType<typeof useR
   else router.push("/client/dashboard");
 }
 
-export default function AuthLoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const verified = searchParams.get("verified") === "true";
@@ -255,5 +255,13 @@ export default function AuthLoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div />}>
+      <LoginForm />
+    </Suspense>
   );
 }
