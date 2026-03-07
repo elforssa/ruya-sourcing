@@ -23,7 +23,9 @@ export async function PATCH(
 
   const updated = await prisma.user.update({
     where: { id: params.id },
-    data: { isActive: !user.isActive },
+    data: user.isActive
+      ? { isActive: false, bannedAt: new Date(), bannedReason: "Deactivated by admin" }
+      : { isActive: true,  bannedAt: null,       bannedReason: null },
   });
 
   return NextResponse.json({ isActive: updated.isActive });
