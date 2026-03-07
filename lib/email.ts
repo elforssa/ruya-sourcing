@@ -627,7 +627,43 @@ export async function sendAgentWelcomeEmail(
   }
 }
 
-// ─── 7. Password reset ────────────────────────────────────────────────────────
+// ─── 7. Role changed notification ─────────────────────────────────────────────
+
+export async function sendRoleChangedEmail(
+  email: string,
+  name: string,
+  fromRole: string,
+  toRole: string
+) {
+  const baseUrl = process.env.NEXTAUTH_URL || "https://ruya-platform-tau.vercel.app";
+  const portalPath = toRole === "AGENT" ? "/agent/dashboard" : "/client/dashboard";
+  const roleBadgeColor = toRole === "AGENT" ? "#7c3aed" : "#059669";
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: resolveRecipient(email),
+      subject: `Your RUYA account role has been updated to ${toRole}`,
+      html: base(`
+        <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${name} 👋</p>
+        <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f2044;">Your role has been updated</h2>
+        ${badge(`Role: ${fromRole} → ${toRole}`, roleBadgeColor)}
+        <p style="margin:16px 0 20px;font-size:14px;color:#374151;line-height:1.6;">
+          An administrator has updated your role on the RUYA platform from
+          <strong>${fromRole}</strong> to <strong>${toRole}</strong>.
+          Your dashboard and available features have been updated accordingly.
+        </p>
+        ${btn("Go to Your Dashboard →", `${baseUrl}${portalPath}`)}
+        <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;">
+          If you believe this was done in error, please contact support@ruya-sourcing.com.
+        </p>
+      `),
+    });
+  } catch (e) {
+    console.error("[email] sendRoleChangedEmail error:", e);
+  }
+}
+
+// ─── 8. Password reset ────────────────────────────────────────────────────────
 
 export async function sendPasswordResetEmail(
   email: string,

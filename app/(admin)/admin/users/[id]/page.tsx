@@ -214,7 +214,7 @@ export default async function AdminUserDetailPage({
             </p>
           </CardHeader>
           <CardContent>
-            <ChangeRole userId={user.id} currentRole={user.role} />
+            <ChangeRole userId={user.id} userName={user.name ?? user.email} currentRole={user.role} />
           </CardContent>
         </Card>
       )}

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Search, UserX, UserCheck, Trash2, Eye, UserPlus,
-  Loader2, AlertCircle, CheckCircle2, X,
+  Loader2, CheckCircle2, X, ArrowLeftRight, AlertTriangle,
 } from "lucide-react";
 import { formatDate, getInitials } from "@/lib/utils";
 
@@ -36,6 +36,85 @@ export interface AgentUser {
 }
 
 // ── Modals ──────────────────────────────────────────────────────────────────────
+
+function ChangeRoleModal({ userId, userName, currentRole, onClose, onDone }: {
+  userId: string; userName: string; currentRole: string;
+  onClose: () => void; onDone: (newRole: string) => void;
+}) {
+  const newRole = currentRole === "CLIENT" ? "AGENT" : "CLIENT";
+  const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState("");
+
+  const roleBadgeCls = (r: string) =>
+    r === "AGENT" ? "bg-purple-100 text-purple-800 border-purple-200" : "bg-emerald-100 text-emerald-800 border-emerald-200";
+
+  const submit = async () => {
+    setLoading(true); setError("");
+    const res  = await fetch(`/api/admin/users/${userId}/role`, {
+      method:  "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ role: newRole }),
+    });
+    const data = await res.json();
+    if (!res.ok) { setError(data.error || "Failed."); setLoading(false); return; }
+    onDone(newRole);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-background rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+            </div>
+            <div>
+              <h3 className="font-bold text-base">Change Role</h3>
+              <p className="text-sm text-muted-foreground mt-0.5">{userName}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1 hover:bg-muted/40 transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Are you sure you want to change{" "}
+          <span className="font-semibold text-foreground">{userName}</span>
+          {"'s role from "}
+          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold mx-0.5 ${roleBadgeCls(currentRole)}`}>
+            {currentRole}
+          </span>
+          {" to "}
+          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold mx-0.5 ${roleBadgeCls(newRole)}`}>
+            {newRole}
+          </span>
+          {"?"}
+        </p>
+
+        <p className="text-xs text-muted-foreground bg-muted/30 rounded-lg px-3 py-2">
+          The user will receive an email notifying them of this change.
+        </p>
+
+        {error && <p className="text-sm text-destructive">{error}</p>}
+
+        <div className="flex gap-3">
+          <button
+            onClick={submit}
+            disabled={loading}
+            className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground py-2.5 text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-all"
+          >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowLeftRight className="h-4 w-4" />}
+            Confirm Change
+          </button>
+          <button onClick={onClose} className="flex-1 rounded-lg border py-2.5 text-sm font-medium hover:bg-muted/20 transition-all">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function BanModal({ userId, userName, onClose, onDone }: {
   userId: string; userName: string; onClose: () => void; onDone: () => void;
@@ -181,19 +260,28 @@ function StatusBadge({ isActive }: { isActive: boolean }) {
 interface Props {
   clients: ClientUser[];
   agents: AgentUser[];
+  successMessage?: string;
 }
 
-export default function UsersClient({ clients, agents }: Props) {
+export default function UsersClient({ clients, agents, successMessage }: Props) {
   const router = useRouter();
-  const [tab,          setTab]          = useState<"clients" | "agents">("clients");
-  const [search,       setSearch]       = useState("");
-  const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "BANNED">("ALL");
+  const [tab,              setTab]              = useState<"clients" | "agents">("clients");
+  const [search,           setSearch]           = useState("");
+  const [statusFilter,     setStatusFilter]     = useState<"ALL" | "ACTIVE" | "BANNED">("ALL");
 
-  const [banTarget,    setBanTarget]    = useState<{ id: string; name: string } | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
-  const [actionOk,     setActionOk]     = useState("");
+  const [banTarget,        setBanTarget]        = useState<{ id: string; name: string } | null>(null);
+  const [deleteTarget,     setDeleteTarget]     = useState<{ id: string; name: string } | null>(null);
+  const [changeRoleTarget, setChangeRoleTarget] = useState<{ id: string; name: string; role: string } | null>(null);
+  const [actionOk,         setActionOk]         = useState(successMessage ?? "");
 
   const [reactivating, setReactivating] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (actionOk) {
+      const t = setTimeout(() => setActionOk(""), 6000);
+      return () => clearTimeout(t);
+    }
+  }, [actionOk]);
 
   const reactivate = async (id: string) => {
     setReactivating(id);
@@ -201,21 +289,24 @@ export default function UsersClient({ clients, agents }: Props) {
     setReactivating(null);
     setActionOk("User reactivated.");
     router.refresh();
-    setTimeout(() => setActionOk(""), 3000);
   };
 
   const onBanDone = () => {
     setBanTarget(null);
     setActionOk("User banned successfully.");
     router.refresh();
-    setTimeout(() => setActionOk(""), 3000);
   };
 
   const onDeleteDone = () => {
     setDeleteTarget(null);
     setActionOk("User deleted permanently.");
     router.refresh();
-    setTimeout(() => setActionOk(""), 3000);
+  };
+
+  const onRoleChangeDone = (newRole: string) => {
+    setChangeRoleTarget(null);
+    setActionOk(`Role updated to ${newRole}. Notification email sent.`);
+    router.refresh();
   };
 
   const filterRows = <T extends { name: string | null; email: string; isActive: boolean }>(rows: T[]) =>
@@ -244,6 +335,15 @@ export default function UsersClient({ clients, agents }: Props) {
         <DeleteModal
           userId={deleteTarget.id} userName={deleteTarget.name}
           onClose={() => setDeleteTarget(null)} onDone={onDeleteDone}
+        />
+      )}
+      {changeRoleTarget && (
+        <ChangeRoleModal
+          userId={changeRoleTarget.id}
+          userName={changeRoleTarget.name}
+          currentRole={changeRoleTarget.role}
+          onClose={() => setChangeRoleTarget(null)}
+          onDone={onRoleChangeDone}
         />
       )}
 
@@ -347,7 +447,7 @@ export default function UsersClient({ clients, agents }: Props) {
                       <td className="px-4 py-3 font-semibold">{u._count.orders}</td>
                       <td className="px-4 py-3"><StatusBadge isActive={u.isActive} /></td>
                       <td className="px-4 py-3">
-                        <ActionButtons u={u} setBanTarget={setBanTarget} setDeleteTarget={setDeleteTarget} reactivate={reactivate} reactivating={reactivating} />
+                        <ActionButtons u={u} currentRole="CLIENT" setBanTarget={setBanTarget} setDeleteTarget={setDeleteTarget} setChangeRoleTarget={setChangeRoleTarget} reactivate={reactivate} reactivating={reactivating} />
                       </td>
                     </tr>
                   ))
@@ -370,7 +470,7 @@ export default function UsersClient({ clients, agents }: Props) {
                       </td>
                       <td className="px-4 py-3"><StatusBadge isActive={u.isActive} /></td>
                       <td className="px-4 py-3">
-                        <ActionButtons u={u} setBanTarget={setBanTarget} setDeleteTarget={setDeleteTarget} reactivate={reactivate} reactivating={reactivating} />
+                        <ActionButtons u={u} currentRole="AGENT" setBanTarget={setBanTarget} setDeleteTarget={setDeleteTarget} setChangeRoleTarget={setChangeRoleTarget} reactivate={reactivate} reactivating={reactivating} />
                       </td>
                     </tr>
                   ))
@@ -383,21 +483,30 @@ export default function UsersClient({ clients, agents }: Props) {
   );
 }
 
-function ActionButtons({ u, setBanTarget, setDeleteTarget, reactivate, reactivating }: {
+function ActionButtons({ u, currentRole, setBanTarget, setDeleteTarget, setChangeRoleTarget, reactivate, reactivating }: {
   u: { id: string; name: string | null; isActive: boolean };
+  currentRole: string;
   setBanTarget: (v: { id: string; name: string }) => void;
   setDeleteTarget: (v: { id: string; name: string }) => void;
+  setChangeRoleTarget: (v: { id: string; name: string; role: string }) => void;
   reactivate: (id: string) => void;
   reactivating: string | null;
 }) {
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1.5 flex-wrap">
       <Link
         href={`/admin/users/${u.id}`}
         className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium hover:bg-muted/20 transition-colors"
       >
         <Eye className="h-3 w-3" /> View
       </Link>
+      <button
+        onClick={() => setChangeRoleTarget({ id: u.id, name: u.name ?? "this user", role: currentRole })}
+        className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+      >
+        <ArrowLeftRight className="h-3 w-3" />
+        {currentRole === "CLIENT" ? "→ Agent" : "→ Client"}
+      </button>
       {u.isActive ? (
         <button
           onClick={() => setBanTarget({ id: u.id, name: u.name ?? "this user" })}

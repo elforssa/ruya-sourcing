@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft, UserPlus, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff,
+  ArrowLeft, UserPlus, Loader2, AlertCircle, Eye, EyeOff,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -16,11 +16,10 @@ export default function NewAgentPage() {
   const [showPw,   setShowPw]   = useState(false);
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState("");
-  const [success,  setSuccess]  = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true); setError(""); setSuccess("");
+    setLoading(true); setError("");
     try {
       const res  = await fetch("/api/admin/users/new-agent", {
         method:  "POST",
@@ -29,8 +28,7 @@ export default function NewAgentPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to create agent.");
-      setSuccess(`Agent account created for ${name}. A welcome email with credentials has been sent to ${email}.`);
-      setName(""); setEmail(""); setPassword("");
+      router.push(`/admin/users?newAgent=1&name=${encodeURIComponent(name)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -120,12 +118,6 @@ export default function NewAgentPage() {
               </div>
             )}
 
-            {success && (
-              <div className="flex items-start gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2.5 text-sm text-emerald-700">
-                <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />{success}
-              </div>
-            )}
-
             <div className="flex gap-3 pt-2">
               <button
                 type="submit"
@@ -135,15 +127,6 @@ export default function NewAgentPage() {
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
                 Create Agent Account
               </button>
-              {success && (
-                <button
-                  type="button"
-                  onClick={() => router.push("/admin/users")}
-                  className="px-5 rounded-lg border text-sm font-medium hover:bg-muted/20 transition-all"
-                >
-                  Back to Users
-                </button>
-              )}
             </div>
           </form>
         </CardContent>

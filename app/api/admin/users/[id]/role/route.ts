@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendRoleChangedEmail } from "@/lib/email";
 
 const ALLOWED_ROLES = ["CLIENT", "AGENT"] as const;
 type AllowedRole = (typeof ALLOWED_ROLES)[number];
@@ -37,10 +38,33 @@ export async function PATCH(
     return NextResponse.json({ error: `User is already a ${role}.` }, { status: 400 });
   }
 
+  const fromRole = target.role;
+
   const updated = await prisma.user.update({
     where: { id: params.id },
     data: { role: role as AllowedRole },
   });
+
+  // Audit log
+  await prisma.roleChangeLog.create({
+    data: {
+      userId:      params.id,
+      userEmail:   target.email,
+      userName:    target.name,
+      changedById: session.user.id,
+      adminEmail:  session.user.email ?? "",
+      fromRole,
+      toRole:      role as string,
+    },
+  });
+
+  // Notify user of their role change (fire-and-forget)
+  sendRoleChangedEmail(
+    target.email,
+    target.name ?? "User",
+    fromRole,
+    role as string
+  ).catch(() => null);
 
   return NextResponse.json({ ok: true, role: updated.role });
 }

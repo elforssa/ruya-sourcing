@@ -5,7 +5,11 @@ import UsersClient from "./UsersClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminUsersPage() {
+export default async function AdminUsersPage({
+  searchParams,
+}: {
+  searchParams: { newAgent?: string; name?: string };
+}) {
   const session = await getSession();
   if (!session || session.user.role !== "ADMIN") return null;
 
@@ -76,7 +80,15 @@ export default async function AdminUsersPage() {
 
       <Card>
         <CardContent className="pt-6">
-          <UsersClient clients={clients} agents={agents} />
+          <UsersClient
+            clients={clients}
+            agents={agents}
+            successMessage={
+              searchParams.newAgent === "1"
+                ? `Agent "${decodeURIComponent(searchParams.name ?? "New agent")}" created successfully. Welcome email sent.`
+                : undefined
+            }
+          />
         </CardContent>
       </Card>
     </div>
