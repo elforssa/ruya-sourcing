@@ -10,6 +10,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate, formatCurrency, getInitials } from "@/lib/utils";
 import DangerZone from "./DangerZone";
+import ChangeRole from "./ChangeRole";
 
 export const dynamic = "force-dynamic";
 
@@ -202,6 +203,21 @@ export default async function AdminUserDetailPage({
           )}
         </CardContent>
       </Card>
+
+      {/* ── Change role ── */}
+      {user.role !== "ADMIN" && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Change Role</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Switch between CLIENT and AGENT. Admin promotion requires terminal access.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <ChangeRole userId={user.id} currentRole={user.role} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* ── Danger zone ── */}
       {user.role !== "ADMIN" && (

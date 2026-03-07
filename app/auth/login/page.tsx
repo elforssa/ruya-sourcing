@@ -5,12 +5,6 @@ import { signIn, getSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 
-const DEMO_ACCOUNTS = [
-  { label: "Client", email: "client@ruya.com", role: "CLIENT" },
-  { label: "Agent", email: "agent@ruya.com", role: "AGENT" },
-  { label: "Admin", email: "admin@ruya.com", role: "ADMIN" },
-];
-
 function redirectByRole(role: string | undefined, router: ReturnType<typeof useRouter>) {
   if (role === "ADMIN") router.push("/admin/dashboard");
   else if (role === "AGENT") router.push("/agent/dashboard");
@@ -62,12 +56,6 @@ function LoginForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     attemptSignIn(email, password);
-  };
-
-  const handleDemo = (demoEmail: string) => {
-    setEmail(demoEmail);
-    setPassword("password123");
-    attemptSignIn(demoEmail, "password123");
   };
 
   return (
@@ -247,50 +235,6 @@ function LoginForm() {
               {loading ? "Signing in…" : "Sign In"}
             </button>
           </form>
-
-          {/* Divider */}
-          <div className="relative my-7">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }} />
-            </div>
-            <div className="relative flex justify-center">
-              <span
-                className="px-3 text-xs uppercase tracking-widest"
-                style={{ background: "rgba(15,39,68,0.8)", color: "rgba(255,255,255,0.25)" }}
-              >
-                Demo accounts
-              </span>
-            </div>
-          </div>
-
-          {/* Demo Buttons */}
-          <div className="grid grid-cols-3 gap-2">
-            {DEMO_ACCOUNTS.map(({ label, email: demoEmail }) => (
-              <button
-                key={label}
-                onClick={() => handleDemo(demoEmail)}
-                disabled={loading}
-                className="rounded-lg py-2.5 text-xs font-semibold tracking-wider uppercase transition-all"
-                style={{
-                  background: "rgba(201,168,76,0.06)",
-                  border: "1px solid rgba(201,168,76,0.25)",
-                  color: "#C9A84C",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget.style.background = "rgba(201,168,76,0.14)");
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget.style.background = "rgba(201,168,76,0.06)");
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          <p className="text-center mt-4 text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
-            All demo accounts use password: <span style={{ color: "rgba(201,168,76,0.5)" }}>password123</span>
-          </p>
 
           <div className="mt-6 pt-5 border-t text-center" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
             <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
