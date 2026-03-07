@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as never,
@@ -20,7 +21,14 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
+        const ip =
+          (req?.headers?.["x-forwarded-for"] as string | undefined)
+            ?.split(",")[0]
+            ?.trim() ?? "unknown";
+        const rl = rateLimit(`login:${ip}`, 5, 15 * 60 * 1000);
+        if (!rl.ok) throw new Error("TOO_MANY_ATTEMPTS");
+
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Invalid credentials");
         }
