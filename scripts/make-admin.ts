@@ -2,9 +2,13 @@
  * Admin promotion script.
  *
  * Usage:
- *   npx ts-node scripts/make-admin.ts email@example.com
+ *   npx tsx scripts/make-admin.ts email@example.com
  *
- * Requires DATABASE_URL to be set (loads from .env automatically).
+ *   Or with an explicit DATABASE_URL:
+ *   DATABASE_URL="postgresql://..." npx tsx scripts/make-admin.ts email@example.com
+ *
+ * Note: Use `npx tsx` (not ts-node) — Next.js uses moduleResolution:bundler
+ * which ts-node does not support without a separate tsconfig override.
  * Only run this from a machine with direct database access.
  */
 
@@ -16,7 +20,7 @@ async function main() {
 
   if (!email) {
     console.error("\n  Error: Email argument is required.");
-    console.error("  Usage: npx ts-node scripts/make-admin.ts email@example.com\n");
+    console.error("  Usage: npx tsx scripts/make-admin.ts email@example.com\n");
     process.exit(1);
   }
 
