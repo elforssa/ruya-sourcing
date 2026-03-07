@@ -5,6 +5,7 @@ import RequestsTable from "./RequestsTable";
 import UsersTable from "./UsersTable";
 import OrdersTable from "./OrdersTable";
 import { AnalyticsSection } from "./AnalyticsSection";
+import AgentWorkloadSection from "./AgentWorkloadSection";
 
 export default async function AdminDashboard() {
   const session = await getSession();
@@ -55,6 +56,17 @@ export default async function AdminDashboard() {
 
       {/* Dynamic KPI analytics — date-range aware, client-side */}
       <AnalyticsSection />
+
+      {/* Agent Workload */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Agent Workload</CardTitle>
+          <p className="text-sm text-muted-foreground">Live workload across all active agents — active requests and orders in progress.</p>
+        </CardHeader>
+        <CardContent>
+          <AgentWorkloadSection />
+        </CardContent>
+      </Card>
 
       {/* Requests Management */}
       <Card>

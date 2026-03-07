@@ -1,12 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { MapPin, Loader2, ChevronDown, UserCheck, ArrowRight } from "lucide-react";
 import { formatDate, getStatusColor } from "@/lib/utils";
 import Link from "next/link";
 
 type Agent = { id: string; name: string | null };
+type AgentWorkload = {
+  id:             string;
+  name:           string | null;
+  email:          string;
+  activeRequests: number;
+  activeOrders:   number;
+  totalActive:    number;
+  workloadStatus: "LOW" | "MEDIUM" | "HIGH";
+};
 type Request = {
   id: string;
   productName: string;
@@ -19,6 +28,101 @@ type Request = {
 };
 
 const STATUSES = ["DRAFT", "SUBMITTED", "ASSIGNED", "QUOTATION_SENT", "VALIDATED", "CONVERTED"];
+
+function WorkloadDot({ total }: { total: number }) {
+  const cls =
+    total >= 7 ? "bg-red-500" :
+    total >= 4 ? "bg-amber-400" :
+    "bg-emerald-500";
+  return <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${cls}`} />;
+}
+
+function WorkloadAgentPicker({
+  workloads,
+  value,
+  onChange,
+}: {
+  workloads: AgentWorkload[];
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const selected = workloads.find((a) => a.id === value);
+
+  const labelCfg = (status: AgentWorkload["workloadStatus"]) =>
+    status === "HIGH"   ? { label: "Overloaded", cls: "text-red-600 bg-red-50 border-red-200" } :
+    status === "MEDIUM" ? { label: "Busy",       cls: "text-amber-600 bg-amber-50 border-amber-200" } :
+                          { label: "Available",  cls: "text-emerald-700 bg-emerald-50 border-emerald-200" };
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-2 rounded-lg border border-input bg-background pl-2.5 pr-7 py-1.5 text-xs min-w-[160px] text-left focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors hover:bg-muted/10"
+      >
+        {selected ? (
+          <>
+            <WorkloadDot total={selected.totalActive} />
+            <span className="truncate flex-1">{selected.name}</span>
+          </>
+        ) : (
+          <span className="text-muted-foreground flex-1">Select agent…</span>
+        )}
+        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-full z-50 mt-1 w-72 bg-background border rounded-xl shadow-xl overflow-hidden">
+          <div className="px-3 py-2 border-b bg-muted/30">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Sorted by workload — least busy first
+            </p>
+          </div>
+          <div className="max-h-64 overflow-y-auto">
+            {workloads.map((agent) => {
+              const { label, cls } = labelCfg(agent.workloadStatus);
+              return (
+                <button
+                  key={agent.id}
+                  type="button"
+                  onClick={() => { onChange(agent.id); setOpen(false); }}
+                  className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 text-xs hover:bg-muted/20 transition-colors border-b last:border-0 ${value === agent.id ? "bg-muted/30" : ""}`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <WorkloadDot total={agent.totalActive} />
+                    <span className="font-medium truncate">{agent.name ?? "—"}</span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-muted-foreground tabular-nums">
+                      {agent.activeRequests}r · {agent.activeOrders}o
+                    </span>
+                    <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] font-semibold ${cls}`}>
+                      {label}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+            {workloads.length === 0 && (
+              <p className="px-3 py-4 text-center text-xs text-muted-foreground">No active agents</p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function RequestsTable({
   requests,
@@ -34,6 +138,14 @@ export default function RequestsTable({
   const [assigning, setAssigning] = useState<string | null>(null);
   const [selectedAgents, setSelectedAgents] = useState<Record<string, string>>({});
   const [error, setError] = useState<Record<string, string>>({});
+  const [workloads, setWorkloads] = useState<AgentWorkload[]>([]);
+
+  useEffect(() => {
+    fetch("/api/admin/agent-workload")
+      .then((r) => r.json())
+      .then((data: AgentWorkload[]) => setWorkloads(data))
+      .catch(() => null);
+  }, []);
 
   const now = new Date();
   const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -163,19 +275,14 @@ export default function RequestsTable({
                       </span>
                     ) : (
                       <div className="flex items-center gap-2">
-                        <div className="relative">
-                          <select
-                            value={selectedAgents[req.id] ?? ""}
-                            onChange={(e) => setSelectedAgents((s) => ({ ...s, [req.id]: e.target.value }))}
-                            className="rounded-lg border border-input bg-background pl-3 pr-8 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none"
-                          >
-                            <option value="">Select agent…</option>
-                            {agents.map((a) => (
-                              <option key={a.id} value={a.id}>{a.name}</option>
-                            ))}
-                          </select>
-                          <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-                        </div>
+                        <WorkloadAgentPicker
+                          workloads={workloads.length ? workloads : agents.map((a) => ({
+                            id: a.id, name: a.name, email: "",
+                            activeRequests: 0, activeOrders: 0, totalActive: 0, workloadStatus: "LOW" as const,
+                          }))}
+                          value={selectedAgents[req.id] ?? ""}
+                          onChange={(id) => setSelectedAgents((s) => ({ ...s, [req.id]: id }))}
+                        />
                         <button
                           onClick={() => assignAgent(req.id)}
                           disabled={assigning === req.id}

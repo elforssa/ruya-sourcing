@@ -33,6 +33,10 @@ export interface AgentUser {
   assignedRequestsCount: number;
   completedOrdersCount: number;
   conversionRate: number;
+  activeRequests:  number;
+  activeOrders:    number;
+  totalActive:     number;
+  workloadStatus:  string;
 }
 
 // ── Modals ──────────────────────────────────────────────────────────────────────
@@ -273,6 +277,7 @@ export default function UsersClient({ clients, agents, successMessage }: Props) 
   const [deleteTarget,     setDeleteTarget]     = useState<{ id: string; name: string } | null>(null);
   const [changeRoleTarget, setChangeRoleTarget] = useState<{ id: string; name: string; role: string } | null>(null);
   const [actionOk,         setActionOk]         = useState(successMessage ?? "");
+  const [workloadSort,     setWorkloadSort]      = useState<"asc" | "desc" | null>(null);
 
   const [reactivating, setReactivating] = useState<string | null>(null);
 
@@ -309,6 +314,12 @@ export default function UsersClient({ clients, agents, successMessage }: Props) 
     router.refresh();
   };
 
+  const sortedAgents = workloadSort
+    ? [...agents].sort((a, b) =>
+        workloadSort === "asc" ? a.totalActive - b.totalActive : b.totalActive - a.totalActive
+      )
+    : agents;
+
   const filterRows = <T extends { name: string | null; email: string; isActive: boolean }>(rows: T[]) =>
     rows
       .filter((u) =>
@@ -319,7 +330,7 @@ export default function UsersClient({ clients, agents, successMessage }: Props) 
       );
 
   const filteredClients = filterRows(clients);
-  const filteredAgents  = filterRows(agents);
+  const filteredAgents  = filterRows(sortedAgents);
   const rows = tab === "clients" ? filteredClients : filteredAgents;
 
   return (
@@ -425,6 +436,12 @@ export default function UsersClient({ clients, agents, successMessage }: Props) 
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground">Assigned</th>
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground">Completed</th>
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground">Conv. Rate</th>
+                    <th
+                      className="px-4 py-3 text-left font-medium text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors"
+                      onClick={() => setWorkloadSort((s) => s === "asc" ? "desc" : "asc")}
+                    >
+                      Workload {workloadSort === "asc" ? "↑" : workloadSort === "desc" ? "↓" : "↕"}
+                    </th>
                   </>
                 )}
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
@@ -467,6 +484,21 @@ export default function UsersClient({ clients, agents, successMessage }: Props) 
                         <span className={`font-semibold ${u.conversionRate >= 50 ? "text-emerald-600" : u.conversionRate > 0 ? "text-amber-600" : "text-muted-foreground"}`}>
                           {u.conversionRate}%
                         </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${
+                            u.workloadStatus === "HIGH"   ? "bg-red-500" :
+                            u.workloadStatus === "MEDIUM" ? "bg-amber-400" :
+                            "bg-emerald-500"
+                          }`} />
+                          <span className={`text-sm font-semibold ${
+                            u.workloadStatus === "HIGH"   ? "text-red-600" :
+                            u.workloadStatus === "MEDIUM" ? "text-amber-600" :
+                            "text-emerald-700"
+                          }`}>{u.totalActive}</span>
+                          <span className="text-xs text-muted-foreground">({u.activeRequests}r·{u.activeOrders}o)</span>
+                        </div>
                       </td>
                       <td className="px-4 py-3"><StatusBadge isActive={u.isActive} /></td>
                       <td className="px-4 py-3">

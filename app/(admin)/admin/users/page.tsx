@@ -23,9 +23,13 @@ export default async function AdminUsersPage({
       where: { role: "AGENT" },
       include: {
         _count: { select: { assignedRequests: true } },
+        assignedRequests: {
+          where:  { status: { in: ["ASSIGNED", "QUOTATION_SENT"] } },
+          select: { id: true },
+        },
         quotations: {
           select: {
-            orders: { where: { status: "DELIVERED" }, select: { id: true } },
+            orders: { select: { id: true, status: true } },
           },
         },
       },
@@ -47,9 +51,16 @@ export default async function AdminUsersPage({
     _count:       u._count,
   }));
 
+  const ACTIVE_ORDER_STATUSES = ["CONFIRMED", "PAYMENT_PENDING", "PAID", "IN_PRODUCTION", "SHIPPED"];
+
   const agents = rawAgents.map((u: RawAgent) => {
-    const completedOrdersCount  = u.quotations.reduce((s: number, q: RawAgent["quotations"][0]) => s + q.orders.length, 0);
+    const allOrders             = u.quotations.flatMap((q: RawAgent["quotations"][0]) => q.orders);
+    const completedOrdersCount  = allOrders.filter((o: { status: string }) => o.status === "DELIVERED").length;
+    const activeOrders          = allOrders.filter((o: { status: string }) => ACTIVE_ORDER_STATUSES.includes(o.status)).length;
     const assignedRequestsCount = u._count.assignedRequests;
+    const activeRequests        = u.assignedRequests.length;
+    const totalActive           = activeRequests + activeOrders;
+    const workloadStatus        = totalActive <= 3 ? "LOW" : totalActive <= 6 ? "MEDIUM" : "HIGH";
     const conversionRate        = assignedRequestsCount > 0
       ? Math.round((completedOrdersCount / assignedRequestsCount) * 100)
       : 0;
@@ -64,6 +75,10 @@ export default async function AdminUsersPage({
       assignedRequestsCount,
       completedOrdersCount,
       conversionRate,
+      activeRequests,
+      activeOrders,
+      totalActive,
+      workloadStatus,
     };
   });
 
