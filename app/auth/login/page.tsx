@@ -70,7 +70,7 @@ function LoginForm() {
 
         {/* Logo */}
         <div className="text-center mb-10">
-          <Image src="/logo.png" alt="RUYA" width={240} height={80} className="h-16 w-auto mx-auto" />
+          <Image src="/logo.png" alt="RUYA" width={160} height={50} priority className="h-16 w-auto mx-auto" />
         </div>
 
         {/* Card */}
