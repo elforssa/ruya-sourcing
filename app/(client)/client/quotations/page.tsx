@@ -17,9 +17,9 @@ export default async function ClientQuotationsPage() {
   });
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Quotations</h1>
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Quotations</h1>
         <p className="text-muted-foreground mt-1">Review quotations from your sourcing agents.</p>
       </div>
 
@@ -47,7 +47,7 @@ export default async function ClientQuotationsPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 text-sm">
                   <div>
                     <p className="text-muted-foreground text-xs">Unit Price</p>
                     <p className="font-medium">{formatCurrency(q.unitPrice)}</p>

@@ -366,150 +366,214 @@ export default function UsersClient({ clients, agents, successMessage }: Props) 
       )}
 
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-3 mb-5">
-        {/* Tabs */}
-        <div className="flex rounded-lg border bg-muted/20 p-0.5 gap-0.5">
-          {(["clients", "agents"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all capitalize ${
-                tab === t ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t} <span className="ml-1 text-xs opacity-60">({t === "clients" ? clients.length : agents.length})</span>
-            </button>
-          ))}
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 mb-5">
+        {/* Top row: tabs + add agent */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex rounded-lg border bg-muted/20 p-0.5 gap-0.5">
+            {(["clients", "agents"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all capitalize ${
+                  tab === t ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {t} <span className="ml-1 text-xs opacity-60">({t === "clients" ? clients.length : agents.length})</span>
+              </button>
+            ))}
+          </div>
+          <Link
+            href="/admin/users/new-agent"
+            className="sm:hidden inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-all"
+          >
+            <UserPlus className="h-4 w-4" /> Add
+          </Link>
         </div>
 
-        {/* Search */}
-        <div className="relative flex-1 min-w-48">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name or email…"
-            className="w-full rounded-lg border bg-background pl-9 pr-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-          />
+        {/* Search + filter row */}
+        <div className="flex items-center gap-2 flex-1">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name or email…"
+              className="w-full rounded-lg border bg-background pl-9 pr-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+            className="rounded-lg border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+          >
+            <option value="ALL">All Status</option>
+            <option value="ACTIVE">Active</option>
+            <option value="BANNED">Banned</option>
+          </select>
         </div>
 
-        {/* Status filter */}
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-          className="rounded-lg border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-        >
-          <option value="ALL">All Status</option>
-          <option value="ACTIVE">Active</option>
-          <option value="BANNED">Banned</option>
-        </select>
+        <span className="text-xs text-muted-foreground sm:ml-auto hidden sm:inline">{rows.length} user{rows.length !== 1 ? "s" : ""}</span>
 
-        <span className="text-xs text-muted-foreground ml-auto">{rows.length} user{rows.length !== 1 ? "s" : ""}</span>
-
-        {/* Add agent button */}
+        {/* Add agent button desktop */}
         <Link
           href="/admin/users/new-agent"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-all"
+          className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-all"
         >
           <UserPlus className="h-4 w-4" /> Add Agent
         </Link>
       </div>
 
-      {/* Table */}
       {rows.length === 0 ? (
         <p className="py-12 text-center text-sm text-muted-foreground">No users match this filter.</p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/40">
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">User</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Email</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Joined</th>
-                {tab === "clients" ? (
-                  <>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Requests</th>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Orders</th>
-                  </>
-                ) : (
-                  <>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Assigned</th>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Completed</th>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Conv. Rate</th>
-                    <th
-                      className="px-4 py-3 text-left font-medium text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors"
-                      onClick={() => setWorkloadSort((s) => s === "asc" ? "desc" : "asc")}
-                    >
-                      Workload {workloadSort === "asc" ? "↑" : workloadSort === "desc" ? "↓" : "↕"}
-                    </th>
-                  </>
-                )}
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tab === "clients"
-                ? filteredClients.map((u) => (
-                    <tr key={u.id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2.5">
-                          <Avatar name={u.name} isActive={u.isActive} />
-                          <span className="font-medium">{u.name ?? "—"}</span>
+        <>
+          {/* Mobile cards */}
+          <div className="sm:hidden space-y-3">
+            {tab === "clients"
+              ? filteredClients.map((u) => (
+                  <div key={u.id} className="rounded-xl border bg-card p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Avatar name={u.name} isActive={u.isActive} />
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{u.name ?? "—"}</p>
+                          <p className="text-xs text-muted-foreground truncate">{u.email}</p>
                         </div>
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{formatDate(u.createdAt)}</td>
-                      <td className="px-4 py-3 font-semibold">{u._count.sourcingRequests}</td>
-                      <td className="px-4 py-3 font-semibold">{u._count.orders}</td>
-                      <td className="px-4 py-3"><StatusBadge isActive={u.isActive} /></td>
-                      <td className="px-4 py-3">
-                        <ActionButtons u={u} currentRole="CLIENT" setBanTarget={setBanTarget} setDeleteTarget={setDeleteTarget} setChangeRoleTarget={setChangeRoleTarget} reactivate={reactivate} reactivating={reactivating} />
-                      </td>
-                    </tr>
-                  ))
-                : filteredAgents.map((u) => (
-                    <tr key={u.id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2.5">
-                          <Avatar name={u.name} isActive={u.isActive} />
-                          <span className="font-medium">{u.name ?? "—"}</span>
+                      </div>
+                      <StatusBadge isActive={u.isActive} />
+                    </div>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <span>{u._count.sourcingRequests} requests</span>
+                      <span>{u._count.orders} orders</span>
+                      <span>{formatDate(u.createdAt)}</span>
+                    </div>
+                    <ActionButtons u={u} currentRole="CLIENT" setBanTarget={setBanTarget} setDeleteTarget={setDeleteTarget} setChangeRoleTarget={setChangeRoleTarget} reactivate={reactivate} reactivating={reactivating} />
+                  </div>
+                ))
+              : filteredAgents.map((u) => (
+                  <div key={u.id} className="rounded-xl border bg-card p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Avatar name={u.name} isActive={u.isActive} />
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{u.name ?? "—"}</p>
+                          <p className="text-xs text-muted-foreground truncate">{u.email}</p>
                         </div>
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{formatDate(u.createdAt)}</td>
-                      <td className="px-4 py-3 font-semibold">{u.assignedRequestsCount}</td>
-                      <td className="px-4 py-3 font-semibold">{u.completedOrdersCount}</td>
-                      <td className="px-4 py-3">
-                        <span className={`font-semibold ${u.conversionRate >= 50 ? "text-emerald-600" : u.conversionRate > 0 ? "text-amber-600" : "text-muted-foreground"}`}>
-                          {u.conversionRate}%
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1.5">
-                          <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${
-                            u.workloadStatus === "HIGH"   ? "bg-red-500" :
-                            u.workloadStatus === "MEDIUM" ? "bg-amber-400" :
-                            "bg-emerald-500"
-                          }`} />
-                          <span className={`text-sm font-semibold ${
-                            u.workloadStatus === "HIGH"   ? "text-red-600" :
-                            u.workloadStatus === "MEDIUM" ? "text-amber-600" :
-                            "text-emerald-700"
-                          }`}>{u.totalActive}</span>
-                          <span className="text-xs text-muted-foreground">({u.activeRequests}r·{u.activeOrders}o)</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3"><StatusBadge isActive={u.isActive} /></td>
-                      <td className="px-4 py-3">
-                        <ActionButtons u={u} currentRole="AGENT" setBanTarget={setBanTarget} setDeleteTarget={setDeleteTarget} setChangeRoleTarget={setChangeRoleTarget} reactivate={reactivate} reactivating={reactivating} />
-                      </td>
-                    </tr>
-                  ))
-              }
-            </tbody>
-          </table>
-        </div>
+                      </div>
+                      <StatusBadge isActive={u.isActive} />
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div>
+                        <p className="text-muted-foreground">Assigned</p>
+                        <p className="font-semibold">{u.assignedRequestsCount}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Completed</p>
+                        <p className="font-semibold">{u.completedOrdersCount}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Conv.</p>
+                        <p className={`font-semibold ${u.conversionRate >= 50 ? "text-emerald-600" : u.conversionRate > 0 ? "text-amber-600" : "text-muted-foreground"}`}>{u.conversionRate}%</p>
+                      </div>
+                    </div>
+                    <ActionButtons u={u} currentRole="AGENT" setBanTarget={setBanTarget} setDeleteTarget={setDeleteTarget} setChangeRoleTarget={setChangeRoleTarget} reactivate={reactivate} reactivating={reactivating} />
+                  </div>
+                ))
+            }
+          </div>
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto rounded-lg border">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/40">
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">User</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Email</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Joined</th>
+                  {tab === "clients" ? (
+                    <>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Requests</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Orders</th>
+                    </>
+                  ) : (
+                    <>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Assigned</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Completed</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Conv. Rate</th>
+                      <th
+                        className="px-4 py-3 text-left font-medium text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors"
+                        onClick={() => setWorkloadSort((s) => s === "asc" ? "desc" : "asc")}
+                      >
+                        Workload {workloadSort === "asc" ? "↑" : workloadSort === "desc" ? "↓" : "↕"}
+                      </th>
+                    </>
+                  )}
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tab === "clients"
+                  ? filteredClients.map((u) => (
+                      <tr key={u.id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2.5">
+                            <Avatar name={u.name} isActive={u.isActive} />
+                            <span className="font-medium">{u.name ?? "—"}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{formatDate(u.createdAt)}</td>
+                        <td className="px-4 py-3 font-semibold">{u._count.sourcingRequests}</td>
+                        <td className="px-4 py-3 font-semibold">{u._count.orders}</td>
+                        <td className="px-4 py-3"><StatusBadge isActive={u.isActive} /></td>
+                        <td className="px-4 py-3">
+                          <ActionButtons u={u} currentRole="CLIENT" setBanTarget={setBanTarget} setDeleteTarget={setDeleteTarget} setChangeRoleTarget={setChangeRoleTarget} reactivate={reactivate} reactivating={reactivating} />
+                        </td>
+                      </tr>
+                    ))
+                  : filteredAgents.map((u) => (
+                      <tr key={u.id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2.5">
+                            <Avatar name={u.name} isActive={u.isActive} />
+                            <span className="font-medium">{u.name ?? "—"}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{formatDate(u.createdAt)}</td>
+                        <td className="px-4 py-3 font-semibold">{u.assignedRequestsCount}</td>
+                        <td className="px-4 py-3 font-semibold">{u.completedOrdersCount}</td>
+                        <td className="px-4 py-3">
+                          <span className={`font-semibold ${u.conversionRate >= 50 ? "text-emerald-600" : u.conversionRate > 0 ? "text-amber-600" : "text-muted-foreground"}`}>
+                            {u.conversionRate}%
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1.5">
+                            <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${
+                              u.workloadStatus === "HIGH"   ? "bg-red-500" :
+                              u.workloadStatus === "MEDIUM" ? "bg-amber-400" :
+                              "bg-emerald-500"
+                            }`} />
+                            <span className={`text-sm font-semibold ${
+                              u.workloadStatus === "HIGH"   ? "text-red-600" :
+                              u.workloadStatus === "MEDIUM" ? "text-amber-600" :
+                              "text-emerald-700"
+                            }`}>{u.totalActive}</span>
+                            <span className="text-xs text-muted-foreground">({u.activeRequests}r·{u.activeOrders}o)</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3"><StatusBadge isActive={u.isActive} /></td>
+                        <td className="px-4 py-3">
+                          <ActionButtons u={u} currentRole="AGENT" setBanTarget={setBanTarget} setDeleteTarget={setDeleteTarget} setChangeRoleTarget={setChangeRoleTarget} reactivate={reactivate} reactivating={reactivating} />
+                        </td>
+                      </tr>
+                    ))
+                }
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </>
   );

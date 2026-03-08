@@ -177,7 +177,7 @@ export default function NewRequestPage() {
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-3xl mx-auto">
       {/* Page title */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground">New Sourcing Request</h1>

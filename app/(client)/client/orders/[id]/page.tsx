@@ -58,7 +58,7 @@ export default async function ClientOrderDetailPage({
   const currentIdx = getStageIndex(order.status);
 
   return (
-    <div className="p-8 max-w-4xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
 
       {/* Back link */}
       <Link
@@ -69,12 +69,12 @@ export default async function ClientOrderDetailPage({
       </Link>
 
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Order #{order.id.slice(-8).toUpperCase()}</h1>
           <p className="text-muted-foreground mt-1">{order.request.productName}</p>
         </div>
-        <span className="inline-flex items-center rounded-full bg-primary/10 text-primary px-3 py-1 text-sm font-semibold">
+        <span className="self-start inline-flex items-center rounded-full bg-primary/10 text-primary px-3 py-1 text-sm font-semibold">
           {order.status.replace(/_/g, " ")}
         </span>
       </div>
@@ -87,7 +87,7 @@ export default async function ClientOrderDetailPage({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 sm:grid-cols-4">
             <div>
               <p className="text-xs text-muted-foreground mb-1">Product</p>
               <p className="font-semibold">{order.request.productName}</p>
@@ -106,7 +106,7 @@ export default async function ClientOrderDetailPage({
             </div>
           </div>
 
-          <div className="mt-5 pt-5 border-t grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="mt-5 pt-5 border-t grid grid-cols-2 gap-4 sm:gap-6 sm:grid-cols-4">
             <div>
               <p className="text-xs text-muted-foreground mb-1">Supplier</p>
               <p className="font-semibold">{order.quotation.supplierName ?? "—"}</p>
@@ -145,6 +145,33 @@ export default async function ClientOrderDetailPage({
           <CardTitle className="text-base">Order Progress</CardTitle>
         </CardHeader>
         <CardContent>
+          {/* Mobile: vertical stepper */}
+          <div className="flex flex-col gap-0 sm:hidden">
+            {STAGES.map((stage, idx) => {
+              const isDone    = idx < currentIdx;
+              const isCurrent = idx === currentIdx;
+              const Icon = stage.icon;
+              return (
+                <div key={stage.key} className="flex items-center gap-3">
+                  <div className="flex flex-col items-center">
+                    <div className={`h-9 w-9 rounded-full flex items-center justify-center border-2 shrink-0 transition-all
+                      ${isDone    ? "bg-emerald-500 border-emerald-500 text-white" : ""}
+                      ${isCurrent ? "bg-[#c9a84c] border-[#c9a84c] text-white" : ""}
+                      ${idx > currentIdx ? "bg-background border-border text-muted-foreground" : ""}
+                    `}>
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    {idx < STAGES.length - 1 && <div className={`w-0.5 h-5 ${isDone ? "bg-emerald-500" : "bg-border"}`} />}
+                  </div>
+                  <span className={`text-sm font-medium
+                    ${isDone ? "text-emerald-600" : isCurrent ? "text-[#c9a84c]" : "text-muted-foreground"}
+                  `}>{stage.label}</span>
+                </div>
+              );
+            })}
+          </div>
+          {/* Desktop: horizontal timeline */}
+          <div className="hidden sm:block">
           <div className="relative flex items-start justify-between">
             {/* Connector line */}
             <div className="absolute top-5 left-5 right-5 h-0.5 bg-border z-0" />
@@ -157,35 +184,26 @@ export default async function ClientOrderDetailPage({
               const isDone    = idx < currentIdx;
               const isCurrent = idx === currentIdx;
               const isUpcoming = idx > currentIdx;
-
               const Icon = stage.icon;
-
               return (
                 <div key={stage.key} className="relative z-10 flex flex-col items-center gap-2" style={{ width: `${100 / STAGES.length}%` }}>
-                  <div
-                    className={`h-10 w-10 rounded-full flex items-center justify-center border-2 transition-all
-                      ${isDone    ? "bg-emerald-500 border-emerald-500 text-white" : ""}
-                      ${isCurrent ? "bg-[#c9a84c] border-[#c9a84c] text-white shadow-lg scale-110" : ""}
-                      ${isUpcoming ? "bg-background border-border text-muted-foreground" : ""}
-                    `}
-                  >
+                  <div className={`h-10 w-10 rounded-full flex items-center justify-center border-2 transition-all
+                    ${isDone    ? "bg-emerald-500 border-emerald-500 text-white" : ""}
+                    ${isCurrent ? "bg-[#c9a84c] border-[#c9a84c] text-white shadow-lg scale-110" : ""}
+                    ${isUpcoming ? "bg-background border-border text-muted-foreground" : ""}
+                  `}>
                     <Icon className="h-4 w-4" />
                   </div>
-                  <span
-                    className={`text-xs text-center leading-tight font-medium
-                      ${isDone    ? "text-emerald-600" : ""}
-                      ${isCurrent ? "text-[#c9a84c]" : ""}
-                      ${isUpcoming ? "text-muted-foreground" : ""}
-                    `}
-                  >
-                    {stage.label}
-                  </span>
+                  <span className={`text-xs text-center leading-tight font-medium
+                    ${isDone ? "text-emerald-600" : isCurrent ? "text-[#c9a84c]" : "text-muted-foreground"}
+                  `}>{stage.label}</span>
                 </div>
               );
             })}
           </div>
+          </div>
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
+          <p className="mt-4 sm:mt-6 text-center text-xs text-muted-foreground">
             Order placed on {formatDate(order.createdAt)}
             {order.quotation.agent.name && ` · Managed by ${order.quotation.agent.name}`}
           </p>
@@ -219,24 +237,22 @@ export default async function ClientOrderDetailPage({
       {order.status !== "PAYMENT_PENDING" && order.invoiceUrl && (
         <Card className="border-emerald-200 bg-emerald-50/30">
           <CardContent className="pt-5 pb-5">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
                   <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Payment confirmed</p>
                   {order.paymentConfirmedAt && (
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(order.paymentConfirmedAt).toLocaleString()}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{new Date(order.paymentConfirmedAt).toLocaleString()}</p>
                   )}
                 </div>
               </div>
               <a
                 href={order.invoiceUrl}
                 download
-                className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors"
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors w-full sm:w-auto"
               >
                 <Download className="h-4 w-4" /> Download Invoice
               </a>
@@ -276,7 +292,7 @@ export default async function ClientOrderDetailPage({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 gap-4 sm:gap-6 sm:grid-cols-4">
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Carrier</p>
                 <p className="font-semibold">{order.carrier ?? "—"}</p>

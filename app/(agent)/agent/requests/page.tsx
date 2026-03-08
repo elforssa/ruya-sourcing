@@ -19,9 +19,9 @@ export default async function AgentRequestsPage() {
   });
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Assigned Requests</h1>
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Assigned Requests</h1>
         <p className="text-muted-foreground mt-1">Manage sourcing requests assigned to you.</p>
       </div>
 
@@ -50,7 +50,7 @@ export default async function AgentRequestsPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{req.description}</p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 text-sm">
                   <div>
                     <p className="text-muted-foreground text-xs">Service</p>
                     <p className="font-medium">{req.serviceType.replace(/_/g, " ")}</p>
@@ -68,7 +68,7 @@ export default async function AgentRequestsPage() {
                     <p className="font-medium">{formatDate(req.createdAt)}</p>
                   </div>
                 </div>
-                <div className="mt-4 flex items-center justify-between">
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   {req._count.quotations > 0 && (
                     <div className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700">
                       {req._count.quotations} quotation{req._count.quotations !== 1 ? "s" : ""} sent

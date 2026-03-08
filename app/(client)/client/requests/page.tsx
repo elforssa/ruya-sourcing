@@ -20,10 +20,10 @@ export default async function ClientRequestsPage() {
   });
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">My Requests</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">My Requests</h1>
           <p className="text-muted-foreground mt-1">All your sourcing requests.</p>
         </div>
       </div>
@@ -55,7 +55,7 @@ export default async function ClientRequestsPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{req.description}</p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
                       <p className="text-muted-foreground text-xs">Quantity</p>
                       <p className="font-medium">{req.quantity.toLocaleString()} units</p>

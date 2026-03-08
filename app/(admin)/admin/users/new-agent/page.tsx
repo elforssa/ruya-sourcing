@@ -40,7 +40,7 @@ export default function NewAgentPage() {
   const labelCls = "block text-sm font-medium mb-1.5";
 
   return (
-    <div className="p-8 max-w-xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-xl mx-auto">
       <Link
         href="/admin/users"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"

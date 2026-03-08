@@ -25,9 +25,9 @@ export default async function AdminRequestsPage() {
   ]);
 
   return (
-    <div className="p-8 max-w-screen-xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-screen-xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">All Requests</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">All Requests</h1>
         <p className="text-muted-foreground mt-1">
           Platform-wide sourcing requests — assign agents with live workload visibility.
         </p>

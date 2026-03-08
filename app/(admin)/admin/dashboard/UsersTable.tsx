@@ -59,15 +59,59 @@ export default function UsersTable({ users }: { users: UserRow[] }) {
         </span>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto rounded-xl border border-border">
+      {/* Mobile cards */}
+      <div className="sm:hidden space-y-3">
+        {filtered.map((user) => {
+          const active = localActive[user.id] ?? user.isActive;
+          return (
+            <div key={user.id} className={`rounded-xl border bg-card p-4 space-y-3 ${!active ? "opacity-60" : ""}`}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <span className="text-xs font-bold text-primary">{(user.name ?? user.email)[0].toUpperCase()}</span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{user.name ?? "—"}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  </div>
+                </div>
+                <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                  active ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                }`}>{active ? "Active" : "Inactive"}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                    user.role === "AGENT" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"
+                  }`}>
+                    {user.role === "AGENT" ? <Shield className="h-3 w-3" /> : <User className="h-3 w-3" />}
+                    {user.role}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {user.role === "CLIENT" ? `${user._count.sourcingRequests} requests` : `${user._count.quotations} quotations`}
+                  </span>
+                </div>
+                <button
+                  onClick={() => toggle(user.id)}
+                  disabled={toggling === user.id}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium border transition-all disabled:opacity-60 ${
+                    active ? "border-red-200 text-red-700 bg-red-50 hover:bg-red-100" : "border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                  }`}
+                >
+                  {toggling === user.id ? <Loader2 className="h-3 w-3 animate-spin" /> : active ? "Deactivate" : "Activate"}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {/* Desktop table */}
+      <div className="hidden sm:block overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-muted/40">
               {["User", "Role", "Activity", "Joined", "Status"].map((h) => (
-                <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  {h}
-                </th>
+                <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{h}</th>
               ))}
               <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Toggle</th>
             </tr>
@@ -80,9 +124,7 @@ export default function UsersTable({ users }: { users: UserRow[] }) {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                        <span className="text-xs font-bold text-primary">
-                          {(user.name ?? user.email)[0].toUpperCase()}
-                        </span>
+                        <span className="text-xs font-bold text-primary">{(user.name ?? user.email)[0].toUpperCase()}</span>
                       </div>
                       <div>
                         <p className="font-medium">{user.name ?? "—"}</p>
@@ -92,44 +134,30 @@ export default function UsersTable({ users }: { users: UserRow[] }) {
                   </td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                      user.role === "AGENT"
-                        ? "bg-purple-100 text-purple-700"
-                        : "bg-blue-100 text-blue-700"
+                      user.role === "AGENT" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"
                     }`}>
                       {user.role === "AGENT" ? <Shield className="h-3 w-3" /> : <User className="h-3 w-3" />}
                       {user.role}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground text-xs">
-                    {user.role === "CLIENT" ? (
-                      <span>{user._count.sourcingRequests} request{user._count.sourcingRequests !== 1 ? "s" : ""}</span>
-                    ) : (
-                      <span>{user._count.quotations} quotation{user._count.quotations !== 1 ? "s" : ""}</span>
-                    )}
+                    {user.role === "CLIENT" ? `${user._count.sourcingRequests} requests` : `${user._count.quotations} quotations`}
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                    {formatDate(user.createdAt)}
-                  </td>
+                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(user.createdAt)}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                       active ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
-                    }`}>
-                      {active ? "Active" : "Inactive"}
-                    </span>
+                    }`}>{active ? "Active" : "Inactive"}</span>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => toggle(user.id)}
                       disabled={toggling === user.id}
                       className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium border transition-all disabled:opacity-60 ${
-                        active
-                          ? "border-red-200 text-red-700 bg-red-50 hover:bg-red-100"
-                          : "border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                        active ? "border-red-200 text-red-700 bg-red-50 hover:bg-red-100" : "border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
                       }`}
                     >
-                      {toggling === user.id ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : active ? "Deactivate" : "Activate"}
+                      {toggling === user.id ? <Loader2 className="h-3 w-3 animate-spin" /> : active ? "Deactivate" : "Activate"}
                     </button>
                   </td>
                 </tr>

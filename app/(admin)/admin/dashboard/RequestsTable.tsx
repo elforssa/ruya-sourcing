@@ -193,18 +193,14 @@ export default function RequestsTable({
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground font-medium">Status</span>
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+        <div className="grid grid-cols-3 gap-2 sm:contents">
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={select}>
             <option value="ALL">All Statuses</option>
             {STATUSES.map((s) => (
               <option key={s} value={s}>{s.replace(/_/g, " ")}</option>
             ))}
           </select>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground font-medium">Agent</span>
           <select value={agentFilter} onChange={(e) => setAgentFilter(e.target.value)} className={select}>
             <option value="ALL">All Agents</option>
             <option value="UNASSIGNED">Unassigned</option>
@@ -212,102 +208,126 @@ export default function RequestsTable({
               <option key={a.id} value={a.name ?? a.id}>{a.name}</option>
             ))}
           </select>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground font-medium">Date</span>
           <select value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)} className={select}>
             <option value="ALL">All Time</option>
             <option value="THIS_MONTH">This Month</option>
             <option value="LAST_MONTH">Last Month</option>
           </select>
         </div>
-        <span className="ml-auto text-xs text-muted-foreground">
+        <span className="text-xs text-muted-foreground sm:ml-auto">
           {filtered.length} of {requests.length} requests
         </span>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto rounded-xl border border-border">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/40">
-              {["Client", "Product", "Destination", "Date", "Status", "Assigned Agent"].map((h) => (
-                <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
-                  {h}
-                </th>
-              ))}
-              <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {filtered.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="text-center py-12 text-muted-foreground text-sm">
-                  No requests match the selected filters.
-                </td>
-              </tr>
-            ) : (
-              filtered.map((req) => (
-                <tr key={req.id} className="hover:bg-muted/20 transition-colors">
-                  <td className="px-4 py-3 font-medium">{req.client.name}</td>
-                  <td className="px-4 py-3">
-                    <p className="font-medium">{req.productName}</p>
-                    <p className="text-xs text-muted-foreground">{req.quantity.toLocaleString()} units</p>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {req.destinationCountry ? (
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-3.5 w-3.5 shrink-0" />{req.destinationCountry}
-                      </span>
-                    ) : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(req.createdAt)}</td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusColor(req.status)}`}>
-                      {req.status.replace(/_/g, " ")}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    {req.agent ? (
-                      <span className="flex items-center gap-1.5 text-sm">
-                        <UserCheck className="h-3.5 w-3.5 text-emerald-600" />
-                        {req.agent.name}
-                      </span>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <WorkloadAgentPicker
-                          workloads={workloads.length ? workloads : agents.map((a) => ({
-                            id: a.id, name: a.name, email: "",
-                            activeRequests: 0, activeOrders: 0, totalActive: 0, workloadStatus: "LOW" as const,
-                          }))}
-                          value={selectedAgents[req.id] ?? ""}
-                          onChange={(id) => setSelectedAgents((s) => ({ ...s, [req.id]: id }))}
-                        />
-                        <button
-                          onClick={() => assignAgent(req.id)}
-                          disabled={assigning === req.id}
-                          className="inline-flex items-center gap-1 rounded-lg bg-primary text-primary-foreground px-2.5 py-1.5 text-xs font-medium hover:opacity-90 disabled:opacity-60"
-                        >
-                          {assigning === req.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Assign"}
-                        </button>
-                      </div>
-                    )}
-                    {error[req.id] && <p className="text-xs text-destructive mt-1">{error[req.id]}</p>}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Link
-                      href={`/admin/requests`}
-                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+      {filtered.length === 0 ? (
+        <p className="text-center py-10 text-sm text-muted-foreground">No requests match the selected filters.</p>
+      ) : (
+        <>
+          {/* Mobile cards */}
+          <div className="sm:hidden space-y-3">
+            {filtered.map((req) => (
+              <div key={req.id} className="rounded-xl border bg-card p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-semibold truncate">{req.productName}</p>
+                    <p className="text-xs text-muted-foreground">{req.client.name} · {req.quantity.toLocaleString()} units</p>
+                  </div>
+                  <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusColor(req.status)}`}>
+                    {req.status.replace(/_/g, " ")}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  {req.destinationCountry && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{req.destinationCountry}</span>}
+                  <span>{formatDate(req.createdAt)}</span>
+                </div>
+                {req.agent ? (
+                  <div className="flex items-center gap-1.5 text-sm">
+                    <UserCheck className="h-3.5 w-3.5 text-emerald-600" />
+                    <span className="text-sm">{req.agent.name}</span>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <WorkloadAgentPicker
+                      workloads={workloads.length ? workloads : agents.map((a) => ({
+                        id: a.id, name: a.name, email: "",
+                        activeRequests: 0, activeOrders: 0, totalActive: 0, workloadStatus: "LOW" as const,
+                      }))}
+                      value={selectedAgents[req.id] ?? ""}
+                      onChange={(id) => setSelectedAgents((s) => ({ ...s, [req.id]: id }))}
+                    />
+                    <button
+                      onClick={() => assignAgent(req.id)}
+                      disabled={assigning === req.id}
+                      className="w-full inline-flex items-center justify-center gap-1 rounded-lg bg-primary text-primary-foreground px-3 py-2 text-xs font-medium hover:opacity-90 disabled:opacity-60"
                     >
-                      View <ArrowRight className="h-3 w-3" />
-                    </Link>
-                  </td>
+                      {assigning === req.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Assign Agent"}
+                    </button>
+                    {error[req.id] && <p className="text-xs text-destructive">{error[req.id]}</p>}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto rounded-xl border border-border">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/40">
+                  {["Client", "Product", "Destination", "Date", "Status", "Assigned Agent"].map((h) => (
+                    <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">{h}</th>
+                  ))}
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Action</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {filtered.map((req) => (
+                  <tr key={req.id} className="hover:bg-muted/20 transition-colors">
+                    <td className="px-4 py-3 font-medium">{req.client.name}</td>
+                    <td className="px-4 py-3">
+                      <p className="font-medium">{req.productName}</p>
+                      <p className="text-xs text-muted-foreground">{req.quantity.toLocaleString()} units</p>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {req.destinationCountry ? <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5 shrink-0" />{req.destinationCountry}</span> : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(req.createdAt)}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusColor(req.status)}`}>{req.status.replace(/_/g, " ")}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {req.agent ? (
+                        <span className="flex items-center gap-1.5 text-sm"><UserCheck className="h-3.5 w-3.5 text-emerald-600" />{req.agent.name}</span>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <WorkloadAgentPicker
+                            workloads={workloads.length ? workloads : agents.map((a) => ({
+                              id: a.id, name: a.name, email: "",
+                              activeRequests: 0, activeOrders: 0, totalActive: 0, workloadStatus: "LOW" as const,
+                            }))}
+                            value={selectedAgents[req.id] ?? ""}
+                            onChange={(id) => setSelectedAgents((s) => ({ ...s, [req.id]: id }))}
+                          />
+                          <button
+                            onClick={() => assignAgent(req.id)}
+                            disabled={assigning === req.id}
+                            className="inline-flex items-center gap-1 rounded-lg bg-primary text-primary-foreground px-2.5 py-1.5 text-xs font-medium hover:opacity-90 disabled:opacity-60"
+                          >
+                            {assigning === req.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Assign"}
+                          </button>
+                        </div>
+                      )}
+                      {error[req.id] && <p className="text-xs text-destructive mt-1">{error[req.id]}</p>}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Link href="/admin/requests" className="inline-flex items-center gap-1 text-xs text-primary hover:underline">View <ArrowRight className="h-3 w-3" /></Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </div>
   );
 }

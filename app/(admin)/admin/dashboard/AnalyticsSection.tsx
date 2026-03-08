@@ -160,57 +160,96 @@ function AgentTable({ agents }: { agents: AgentStat[] }) {
     );
   }
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-border">
-            <th className="pb-3 text-left font-medium text-muted-foreground">Agent</th>
-            <th className="pb-3 text-right font-medium text-muted-foreground">Assigned</th>
-            <th className="pb-3 text-right font-medium text-muted-foreground">Delivered</th>
-            <th className="pb-3 text-right font-medium text-muted-foreground">Active</th>
-            <th className="pb-3 text-right font-medium text-muted-foreground">Avg Response</th>
-            <th className="pb-3 text-right font-medium text-muted-foreground">Conversion</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {agents.map((a, i) => {
-            const conv = getConversionColor(a.conversionRate);
-            return (
-              <tr key={a.id} className="hover:bg-muted/30 transition-colors">
-                <td className="py-3 pr-4">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                      <span className="text-xs font-semibold text-primary">{getInitials(a.name)}</span>
-                    </div>
-                    <div>
-                      <p className="font-medium">{a.name}</p>
-                      {i === 0 && agents.length > 1 && (
-                        <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">Top performer</span>
-                      )}
-                    </div>
+    <>
+      {/* Mobile cards */}
+      <div className="sm:hidden space-y-3">
+        {agents.map((a, i) => {
+          const conv = getConversionColor(a.conversionRate);
+          return (
+            <div key={a.id} className="rounded-xl border bg-muted/20 p-3 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <span className="text-xs font-semibold text-primary">{getInitials(a.name)}</span>
                   </div>
-                </td>
-                <td className="py-3 text-right font-medium">{a.assignedRequests}</td>
-                <td className="py-3 text-right">
-                  <span className="font-medium text-emerald-700">{a.completedOrders}</span>
-                </td>
-                <td className="py-3 text-right">
-                  <span className="font-medium text-blue-600">{a.activeOrders}</span>
-                </td>
-                <td className="py-3 text-right text-muted-foreground">
-                  {a.avgResponseTime !== null ? `${a.avgResponseTime}h` : <span className="text-muted-foreground/50">—</span>}
-                </td>
-                <td className="py-3 text-right">
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold border ${conv.bg} ${conv.text} ${conv.border}`}>
-                    {a.conversionRate}%
-                  </span>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{a.name}</p>
+                    {i === 0 && agents.length > 1 && (
+                      <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">Top performer</span>
+                    )}
+                  </div>
+                </div>
+                <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold border ${conv.bg} ${conv.text} ${conv.border}`}>
+                  {a.conversionRate}%
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="text-center rounded-lg bg-muted/40 py-1.5">
+                  <p className="text-muted-foreground">Assigned</p>
+                  <p className="font-semibold">{a.assignedRequests}</p>
+                </div>
+                <div className="text-center rounded-lg bg-muted/40 py-1.5">
+                  <p className="text-muted-foreground">Delivered</p>
+                  <p className="font-semibold text-emerald-700">{a.completedOrders}</p>
+                </div>
+                <div className="text-center rounded-lg bg-muted/40 py-1.5">
+                  <p className="text-muted-foreground">Active</p>
+                  <p className="font-semibold text-blue-600">{a.activeOrders}</p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {/* Desktop table */}
+      <div className="hidden sm:block overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="pb-3 text-left font-medium text-muted-foreground">Agent</th>
+              <th className="pb-3 text-right font-medium text-muted-foreground">Assigned</th>
+              <th className="pb-3 text-right font-medium text-muted-foreground">Delivered</th>
+              <th className="pb-3 text-right font-medium text-muted-foreground">Active</th>
+              <th className="pb-3 text-right font-medium text-muted-foreground">Avg Response</th>
+              <th className="pb-3 text-right font-medium text-muted-foreground">Conversion</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {agents.map((a, i) => {
+              const conv = getConversionColor(a.conversionRate);
+              return (
+                <tr key={a.id} className="hover:bg-muted/30 transition-colors">
+                  <td className="py-3 pr-4">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <span className="text-xs font-semibold text-primary">{getInitials(a.name)}</span>
+                      </div>
+                      <div>
+                        <p className="font-medium">{a.name}</p>
+                        {i === 0 && agents.length > 1 && (
+                          <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">Top performer</span>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-3 text-right font-medium">{a.assignedRequests}</td>
+                  <td className="py-3 text-right"><span className="font-medium text-emerald-700">{a.completedOrders}</span></td>
+                  <td className="py-3 text-right"><span className="font-medium text-blue-600">{a.activeOrders}</span></td>
+                  <td className="py-3 text-right text-muted-foreground">
+                    {a.avgResponseTime !== null ? `${a.avgResponseTime}h` : <span className="text-muted-foreground/50">—</span>}
+                  </td>
+                  <td className="py-3 text-right">
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold border ${conv.bg} ${conv.text} ${conv.border}`}>
+                      {a.conversionRate}%
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 
@@ -339,7 +378,7 @@ export function AnalyticsSection() {
       </div>
 
       {/* ── Row 1: 4 main KPI cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         {loading ? (
           Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
         ) : (
@@ -379,7 +418,7 @@ export function AnalyticsSection() {
       </div>
 
       {/* ── Row 2: 3 secondary KPI cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
         {loading ? (
           Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
         ) : (
