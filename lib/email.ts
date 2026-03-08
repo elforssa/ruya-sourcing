@@ -2,7 +2,8 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const FROM = process.env.EMAIL_FROM ?? "RUYA Platform <onboarding@resend.dev>";
+const FROM     = process.env.EMAIL_FROM ?? "RUYA Platform <onboarding@resend.dev>";
+const BASE_URL = process.env.NEXTAUTH_URL ?? "https://ruya.services";
 // During development/testing with Resend free tier, set DEV_EMAIL_TO to your
 // Resend account email to receive all notifications regardless of recipient.
 const resolveRecipient = (actual: string) =>
@@ -129,8 +130,7 @@ export async function sendNewRequestEmail(
     return;
   }
 
-  const baseUrl = process.env.NEXTAUTH_URL || 'https://ruya-platform-tau.vercel.app';
-  const link = `${baseUrl}/agent/requests/${requestId}`;
+  const link = `${BASE_URL}/agent/requests/${requestId}`;
 
   try {
   const result = await resend.emails.send({
@@ -175,8 +175,7 @@ export async function sendQuotationReceivedEmail(
     return;
   }
 
-  const baseUrl = process.env.NEXTAUTH_URL || 'https://ruya-platform-tau.vercel.app';
-  const link = `${baseUrl}/client/requests/${requestId}`;
+  const link = `${BASE_URL}/client/requests/${requestId}`;
   const subject = isRevision
     ? `Your revised quotation is ready: ${productName}`
     : `Your quotation is ready: ${productName}`;
@@ -225,8 +224,7 @@ export async function sendQuotationAcceptedEmail(
     return;
   }
 
-  const baseUrl = process.env.NEXTAUTH_URL || 'https://ruya-platform-tau.vercel.app';
-  const link = `${baseUrl}/agent/requests/${requestId}`;
+  const link = `${BASE_URL}/agent/requests/${requestId}`;
 
   try {
   const result = await resend.emails.send({
@@ -273,9 +271,8 @@ export async function sendOrderStatusUpdateEmail(
     return;
   }
 
-  const baseUrl = process.env.NEXTAUTH_URL || 'https://ruya-platform-tau.vercel.app';
   const meta   = STATUS_META[newStatus] ?? { label: newStatus.replace(/_/g, " "), color: "#0f2044", message: "Your order status has been updated." };
-  const link   = `${baseUrl}/client/orders/${orderId}`;
+  const link   = `${BASE_URL}/client/orders/${orderId}`;
   const shortId = orderId.slice(-8).toUpperCase();
 
   const trackingBlock = (newStatus === "SHIPPED" || newStatus === "DELIVERED") && trackingNumber
@@ -368,9 +365,8 @@ export async function sendOrderStatusAdminAlert(
     return;
   }
 
-  const baseUrl = process.env.NEXTAUTH_URL || 'https://ruya-platform-tau.vercel.app';
   const meta    = STATUS_META[newStatus] ?? { label: newStatus.replace(/_/g, " "), color: "#0f2044" };
-  const link    = `${baseUrl}/agent/orders/${orderId}`;
+  const link    = `${BASE_URL}/agent/orders/${orderId}`;
   const shortId = orderId.slice(-8).toUpperCase();
 
   try {
@@ -415,8 +411,7 @@ export async function sendRevisionRequestedEmail(
     return;
   }
 
-  const baseUrl = process.env.NEXTAUTH_URL || 'https://ruya-platform-tau.vercel.app';
-  const link = `${baseUrl}/agent/requests/${requestId}`;
+  const link = `${BASE_URL}/agent/requests/${requestId}`;
 
   try {
   const result = await resend.emails.send({
@@ -461,8 +456,7 @@ export async function sendPaymentReceiptNotification(
   orderId: string
 ) {
   if (!process.env.RESEND_API_KEY) return;
-  const baseUrl = process.env.NEXTAUTH_URL || "https://ruya-platform-tau.vercel.app";
-  const link = `${baseUrl}/admin/orders/${orderId}`;
+  const link = `${BASE_URL}/admin/orders/${orderId}`;
   const shortId = orderId.slice(-8).toUpperCase();
   try {
     await resend.emails.send({
@@ -501,8 +495,7 @@ export async function sendPaymentRejectedEmail(
   reason: string
 ) {
   if (!process.env.RESEND_API_KEY) return;
-  const baseUrl = process.env.NEXTAUTH_URL || "https://ruya-platform-tau.vercel.app";
-  const link = `${baseUrl}/client/orders/${orderId}`;
+  const link = `${BASE_URL}/client/orders/${orderId}`;
   const shortId = orderId.slice(-8).toUpperCase();
   try {
     await resend.emails.send({
@@ -538,8 +531,7 @@ export async function sendInvoiceEmail(
   invoiceBuffer: Buffer
 ) {
   if (!process.env.RESEND_API_KEY) return;
-  const baseUrl = process.env.NEXTAUTH_URL || "https://ruya-platform-tau.vercel.app";
-  const link = `${baseUrl}/client/orders/${orderId}`;
+  const link = `${BASE_URL}/client/orders/${orderId}`;
   const shortId = orderId.slice(-8).toUpperCase();
   try {
     await resend.emails.send({
@@ -583,7 +575,6 @@ export async function sendAgentWelcomeEmail(
   tempPassword: string
 ) {
   if (!process.env.RESEND_API_KEY) return;
-  const baseUrl = process.env.NEXTAUTH_URL || "https://ruya-platform-tau.vercel.app";
   try {
     await resend.emails.send({
       from: FROM,
@@ -605,7 +596,7 @@ export async function sendAgentWelcomeEmail(
         <p style="margin:0 0 20px;font-size:13px;color:#6b7280;">
           Please change your password after your first login.
         </p>
-        ${btn("Sign In to RUYA →", `${baseUrl}/auth/login`)}
+        ${btn("Sign In to RUYA →", `${BASE_URL}/auth/login`)}
       `),
     });
   } catch (e) {
@@ -621,7 +612,6 @@ export async function sendRoleChangedEmail(
   fromRole: string,
   toRole: string
 ) {
-  const baseUrl = process.env.NEXTAUTH_URL || "https://ruya-platform-tau.vercel.app";
   const portalPath = toRole === "AGENT" ? "/agent/dashboard" : "/client/dashboard";
   const roleBadgeColor = toRole === "AGENT" ? "#7c3aed" : "#059669";
   try {
@@ -638,7 +628,7 @@ export async function sendRoleChangedEmail(
           <strong>${fromRole}</strong> to <strong>${toRole}</strong>.
           Your dashboard and available features have been updated accordingly.
         </p>
-        ${btn("Go to Your Dashboard →", `${baseUrl}${portalPath}`)}
+        ${btn("Go to Your Dashboard →", `${BASE_URL}${portalPath}`)}
         <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;">
           If you believe this was done in error, please contact support@ruya-sourcing.com.
         </p>

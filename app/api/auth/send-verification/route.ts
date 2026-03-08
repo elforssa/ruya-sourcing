@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     data: { verificationToken: token, verificationTokenExpiry: expiry },
   });
 
-  const baseUrl = process.env.NEXTAUTH_URL || "https://ruya-platform-tau.vercel.app";
+  const baseUrl = process.env.NEXTAUTH_URL ?? "https://ruya.services";
   const verificationLink = `${baseUrl}/api/auth/verify-email?token=${token}`;
 
   await sendVerificationEmail(user.email, user.name ?? "User", verificationLink);

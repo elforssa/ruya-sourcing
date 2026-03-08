@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       data: { resetToken: token, resetTokenExpiry: expiry },
     });
 
-    const baseUrl = process.env.NEXTAUTH_URL || "https://ruya-platform-tau.vercel.app";
+    const baseUrl = process.env.NEXTAUTH_URL ?? "https://ruya.services";
     const resetLink = `${baseUrl}/auth/reset-password?token=${token}`;
 
     await sendPasswordResetEmail(user.email, user.name ?? "User", resetLink);
