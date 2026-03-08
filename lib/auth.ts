@@ -34,15 +34,23 @@ export const authOptions: NextAuthOptions = {
           console.warn("[auth] rate-limit hit for ip=" + ip + " remaining=" + rl.remaining);
           throw new Error("TOO_MANY_ATTEMPTS");
         }
+        console.log("[auth] rate-limit passed, remaining=" + rl.remaining);
 
         if (!credentials?.email || !credentials?.password) {
           console.warn("[auth] missing email or password");
           throw new Error("Invalid credentials");
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        });
+        console.log("[auth] querying DB for: " + credentials.email);
+        let user;
+        try {
+          user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+          });
+        } catch (dbErr: unknown) {
+          console.error("[auth] DB ERROR: " + (dbErr instanceof Error ? dbErr.message : String(dbErr)));
+          throw new Error("Invalid credentials");
+        }
 
         console.log("[auth] user found: " + !!user);
         if (!user) {
