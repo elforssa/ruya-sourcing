@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Eye, EyeOff, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 
 function getStrength(password: string): { level: 0 | 1 | 2 | 3; label: string; color: string } {
@@ -90,7 +91,7 @@ export default function RegisterPage() {
 
         {/* Logo */}
         <div className="text-center mb-8">
-          <img src="/logo.png" alt="RUYA" className="h-14 w-auto mx-auto" />
+          <Image src="/logo.png" alt="RUYA" width={224} height={70} className="h-14 w-auto mx-auto" />
         </div>
 
         {/* Card */}

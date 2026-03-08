@@ -3,6 +3,7 @@
 import { useState, Suspense } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 
 function redirectByRole(role: string | undefined, router: ReturnType<typeof useRouter>) {
@@ -69,7 +70,7 @@ function LoginForm() {
 
         {/* Logo */}
         <div className="text-center mb-10">
-          <img src="/logo.png" alt="RUYA" className="h-16 w-auto mx-auto" />
+          <Image src="/logo.png" alt="RUYA" width={240} height={80} className="h-16 w-auto mx-auto" />
         </div>
 
         {/* Card */}
