@@ -27,9 +27,11 @@ export const authOptions: NextAuthOptions = {
             ?.split(",")[0]
             ?.trim() ?? "unknown";
 
+        console.log("[auth] authorize() called with email: " + credentials?.email);
+
         const rl = await rateLimit(`login:${ip}`, 5, 15 * 60 * 1000);
         if (!rl.ok) {
-          console.warn(`[auth] rate-limit hit for ip=${ip}`);
+          console.warn("[auth] rate-limit hit for ip=" + ip + " remaining=" + rl.remaining);
           throw new Error("TOO_MANY_ATTEMPTS");
         }
 
@@ -42,32 +44,37 @@ export const authOptions: NextAuthOptions = {
           where: { email: credentials.email },
         });
 
+        console.log("[auth] user found: " + !!user);
         if (!user) {
-          console.warn(`[auth] no user found for email=${credentials.email}`);
           throw new Error("Invalid credentials");
         }
+
+        console.log("[auth] emailVerified: " + user.emailVerified);
+        console.log("[auth] isActive: " + user.isActive);
+        console.log("[auth] has password hash: " + !!user.password);
 
         if (!user.password) {
-          console.warn(`[auth] user has no password hash: email=${credentials.email}`);
+          console.warn("[auth] user has no password hash");
           throw new Error("Invalid credentials");
         }
 
-        const isPasswordValid = await bcrypt.compare(
+        const passwordMatch = await bcrypt.compare(
           credentials.password,
           user.password
         );
 
-        if (!isPasswordValid) {
-          console.warn(`[auth] wrong password for email=${credentials.email}`);
+        console.log("[auth] password match: " + passwordMatch);
+
+        if (!passwordMatch) {
           throw new Error("Invalid credentials");
         }
 
         if (!user.isActive) {
-          console.warn(`[auth] suspended account: email=${credentials.email}`);
+          console.warn("[auth] account suspended");
           throw new Error("ACCOUNT_SUSPENDED");
         }
 
-        console.log(`[auth] login success: email=${credentials.email} role=${user.role}`);
+        console.log("[auth] final result: returning user role=" + user.role);
         return {
           id: user.id,
           email: user.email,
