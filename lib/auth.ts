@@ -27,67 +27,41 @@ export const authOptions: NextAuthOptions = {
             ?.split(",")[0]
             ?.trim() ?? "unknown";
 
-        console.log("[auth] authorize() called with email: " + credentials?.email);
-
         let rl = { ok: true, remaining: 5, retryAfterMs: 0 };
         try {
           rl = await rateLimit(`login:${ip}`, 5, 15 * 60 * 1000);
-        } catch (rlErr: unknown) {
-          console.error("[auth] rate-limit ERROR (skipping): " + (rlErr instanceof Error ? rlErr.message : String(rlErr)));
+        } catch {
+          // Rate limiter unavailable — skip, do not block login
         }
         if (!rl.ok) {
-          console.warn("[auth] rate-limit hit for ip=" + ip + " remaining=" + rl.remaining);
           throw new Error("TOO_MANY_ATTEMPTS");
         }
-        console.log("[auth] rate-limit passed, remaining=" + rl.remaining);
 
         if (!credentials?.email || !credentials?.password) {
-          console.warn("[auth] missing email or password");
           throw new Error("Invalid credentials");
         }
 
-        console.log("[auth] querying DB for: " + credentials.email);
-        let user;
-        try {
-          user = await prisma.user.findUnique({
-            where: { email: credentials.email },
-          });
-        } catch (dbErr: unknown) {
-          console.error("[auth] DB ERROR: " + (dbErr instanceof Error ? dbErr.message : String(dbErr)));
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+        });
+
+        if (!user || !user.password) {
           throw new Error("Invalid credentials");
         }
 
-        console.log("[auth] user found: " + !!user);
-        if (!user) {
-          throw new Error("Invalid credentials");
-        }
-
-        console.log("[auth] emailVerified: " + user.emailVerified);
-        console.log("[auth] isActive: " + user.isActive);
-        console.log("[auth] has password hash: " + !!user.password);
-
-        if (!user.password) {
-          console.warn("[auth] user has no password hash");
-          throw new Error("Invalid credentials");
-        }
-
-        const passwordMatch = await bcrypt.compare(
+        const isPasswordValid = await bcrypt.compare(
           credentials.password,
           user.password
         );
 
-        console.log("[auth] password match: " + passwordMatch);
-
-        if (!passwordMatch) {
+        if (!isPasswordValid) {
           throw new Error("Invalid credentials");
         }
 
         if (!user.isActive) {
-          console.warn("[auth] account suspended");
           throw new Error("ACCOUNT_SUSPENDED");
         }
 
-        console.log("[auth] final result: returning user role=" + user.role);
         return {
           id: user.id,
           email: user.email,
@@ -102,7 +76,6 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        console.log(`[auth:jwt] user reached jwt callback: email=${user.email} role=${(user as { role: string }).role}`);
         token.id = user.id;
         token.role = (user as { role: string }).role;
         token.emailVerified = (user as { emailVerified?: Date | null }).emailVerified ?? null;
