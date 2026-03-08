@@ -69,10 +69,7 @@ function LoginForm() {
 
         {/* Logo */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-5"
-            style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)" }}>
-            <span className="text-2xl font-bold" style={{ color: "#C9A84C" }}>R</span>
-          </div>
+          <img src="/logo.png" alt="RUYA" className="h-16 w-auto mx-auto mb-5" />
           <h1
             className="text-5xl font-bold tracking-[0.3em]"
             style={{ color: "#C9A84C", textShadow: "0 0 40px rgba(201,168,76,0.3)" }}

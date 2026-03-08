@@ -90,12 +90,7 @@ export default function RegisterPage() {
 
         {/* Logo */}
         <div className="text-center mb-8">
-          <div
-            className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4"
-            style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)" }}
-          >
-            <span className="text-xl font-bold" style={{ color: "#C9A84C" }}>R</span>
-          </div>
+          <img src="/logo.png" alt="RUYA" className="h-14 w-auto mx-auto mb-4" />
           <h1
             className="text-4xl font-bold tracking-[0.3em]"
             style={{ color: "#C9A84C", textShadow: "0 0 40px rgba(201,168,76,0.3)" }}

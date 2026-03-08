@@ -55,17 +55,7 @@ const ROLE_COLOR: Record<string, string> = {
 function RuyaLogo() {
   return (
     <div className="flex items-center gap-2.5">
-      <div
-        className="flex h-9 w-9 items-center justify-center rounded-xl shrink-0"
-        style={{ background: "linear-gradient(135deg, #0B1F3A 0%, #1a3660 100%)" }}
-      >
-        <span
-          className="text-sm font-bold tracking-widest"
-          style={{ color: "#C9A84C", fontFamily: "var(--font-cairo), Cairo, sans-serif" }}
-        >
-          ر
-        </span>
-      </div>
+      <img src="/logo.png" alt="RUYA" className="h-8 w-auto shrink-0" />
       <div className="flex flex-col leading-none">
         <span
           className="text-lg font-bold tracking-widest"
