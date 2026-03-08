@@ -82,6 +82,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        console.log(`[auth:jwt] user reached jwt callback: email=${user.email} role=${(user as { role: string }).role}`);
         token.id = user.id;
         token.role = (user as { role: string }).role;
         token.emailVerified = (user as { emailVerified?: Date | null }).emailVerified ?? null;
