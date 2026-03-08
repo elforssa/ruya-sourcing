@@ -123,7 +123,6 @@ export async function sendNewRequestEmail(
   requestId: string,
   clientName: string
 ) {
-  console.log("[email] sendNewRequestEmail called", { agentEmail, productName, requestId });
   console.log("[email] RESEND_API_KEY exists:", !!process.env.RESEND_API_KEY);
   if (!process.env.RESEND_API_KEY) {
     console.warn("[email] RESEND_API_KEY is missing — skipping email");
@@ -155,7 +154,6 @@ export async function sendNewRequestEmail(
       ${btn("View Request →", link)}
     `),
   });
-  console.log("[email] sendNewRequestEmail sent:", result);
   } catch (error) {
     console.error("[email] sendNewRequestEmail error:", error);
   }
@@ -171,7 +169,6 @@ export async function sendQuotationReceivedEmail(
   agentName: string,
   isRevision = false
 ) {
-  console.log("[email] sendQuotationReceivedEmail called", { clientEmail, productName, requestId, isRevision });
   console.log("[email] RESEND_API_KEY exists:", !!process.env.RESEND_API_KEY);
   if (!process.env.RESEND_API_KEY) {
     console.warn("[email] RESEND_API_KEY is missing — skipping email");
@@ -208,7 +205,6 @@ export async function sendQuotationReceivedEmail(
       ${btn(isRevision ? "Review Revised Quotation →" : "Review Quotation →", link)}
     `),
   });
-  console.log("[email] sendQuotationReceivedEmail sent:", result);
   } catch (error) {
     console.error("[email] sendQuotationReceivedEmail error:", error);
   }
@@ -223,7 +219,6 @@ export async function sendQuotationAcceptedEmail(
   productName: string,
   requestId: string
 ) {
-  console.log("[email] sendQuotationAcceptedEmail called", { agentEmail, productName, requestId });
   console.log("[email] RESEND_API_KEY exists:", !!process.env.RESEND_API_KEY);
   if (!process.env.RESEND_API_KEY) {
     console.warn("[email] RESEND_API_KEY is missing — skipping email");
@@ -257,7 +252,6 @@ export async function sendQuotationAcceptedEmail(
       ${btn("View Request →", link)}
     `),
   });
-  console.log("[email] sendQuotationAcceptedEmail sent:", result);
   } catch (error) {
     console.error("[email] sendQuotationAcceptedEmail error:", error);
   }
@@ -273,7 +267,6 @@ export async function sendOrderStatusUpdateEmail(
   orderId: string,
   trackingNumber?: string | null
 ) {
-  console.log("[email] sendOrderStatusUpdateEmail called", { clientEmail, productName, orderId, newStatus });
   console.log("[email] RESEND_API_KEY exists:", !!process.env.RESEND_API_KEY);
   if (!process.env.RESEND_API_KEY) {
     console.warn("[email] RESEND_API_KEY is missing — skipping email");
@@ -314,7 +307,6 @@ export async function sendOrderStatusUpdateEmail(
         ${btn("Track Your Order →", link)}
       `),
     });
-    console.log("[email] sendOrderStatusUpdateEmail sent:", result);
   } catch (error) {
     console.error("[email] sendOrderStatusUpdateEmail error:", error);
   }
@@ -327,7 +319,6 @@ export async function sendVerificationEmail(
   name: string,
   verificationLink: string
 ) {
-  console.log("[email] sendVerificationEmail called", { email });
   if (!process.env.RESEND_API_KEY) {
     console.warn("[email] RESEND_API_KEY is missing — skipping email");
     return;
@@ -353,7 +344,6 @@ export async function sendVerificationEmail(
         </p>
       `),
     });
-    console.log("[email] sendVerificationEmail sent:", result);
   } catch (error) {
     console.error("[email] sendVerificationEmail error:", error);
   }
@@ -373,7 +363,6 @@ export async function sendOrderStatusAdminAlert(
     console.log("[email] ADMIN_EMAIL not set — skipping admin alert");
     return;
   }
-  console.log("[email] sendOrderStatusAdminAlert called", { orderId, newStatus });
   if (!process.env.RESEND_API_KEY) {
     console.warn("[email] RESEND_API_KEY is missing — skipping email");
     return;
@@ -405,7 +394,6 @@ export async function sendOrderStatusAdminAlert(
         ${btn("View Order →", link)}
       `),
     });
-    console.log("[email] sendOrderStatusAdminAlert sent:", result);
   } catch (error) {
     console.error("[email] sendOrderStatusAdminAlert error:", error);
   }
@@ -421,7 +409,6 @@ export async function sendRevisionRequestedEmail(
   requestId: string,
   revisionNote: string
 ) {
-  console.log("[email] sendRevisionRequestedEmail called", { agentEmail, productName, requestId });
   console.log("[email] RESEND_API_KEY exists:", !!process.env.RESEND_API_KEY);
   if (!process.env.RESEND_API_KEY) {
     console.warn("[email] RESEND_API_KEY is missing — skipping email");
@@ -460,7 +447,6 @@ export async function sendRevisionRequestedEmail(
       ${btn("Submit Revised Quotation →", link)}
     `),
   });
-  console.log("[email] sendRevisionRequestedEmail sent:", result);
   } catch (error) {
     console.error("[email] sendRevisionRequestedEmail error:", error);
   }
@@ -670,7 +656,6 @@ export async function sendPasswordResetEmail(
   name: string,
   resetLink: string
 ) {
-  console.log("[email] sendPasswordResetEmail called", { email });
   if (!process.env.RESEND_API_KEY) {
     console.warn("[email] RESEND_API_KEY is missing — skipping email");
     return;
@@ -696,7 +681,6 @@ export async function sendPasswordResetEmail(
         </p>
       `),
     });
-    console.log("[email] sendPasswordResetEmail sent:", result);
   } catch (error) {
     console.error("[email] sendPasswordResetEmail error:", error);
   }

@@ -7,8 +7,19 @@ import { createNotification } from "@/lib/notifications";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 
-const MAX_SIZE   = 5 * 1024 * 1024; // 5 MB
-const ALLOWED    = ["image/jpeg", "image/png", "application/pdf"];
+const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
+const ALLOWED  = ["image/jpeg", "image/png", "application/pdf"];
+
+async function verifyMagicBytes(file: File): Promise<boolean> {
+  const buf = Buffer.from(await file.slice(0, 8).arrayBuffer());
+  const jpeg = buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF;
+  const png  = buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4E && buf[3] === 0x47;
+  const pdf  = buf[0] === 0x25 && buf[1] === 0x50 && buf[2] === 0x44 && buf[3] === 0x46;
+  if (file.type === "image/jpeg")      return jpeg;
+  if (file.type === "image/png")       return png;
+  if (file.type === "application/pdf") return pdf;
+  return false;
+}
 
 export async function POST(
   req: NextRequest,
@@ -34,9 +45,10 @@ export async function POST(
   const formData = await req.formData();
   const file = formData.get("receipt") as File | null;
 
-  if (!file)                       return NextResponse.json({ error: "No file uploaded." },  { status: 400 });
-  if (!ALLOWED.includes(file.type)) return NextResponse.json({ error: "Only JPG, PNG, or PDF files are accepted." }, { status: 400 });
-  if (file.size > MAX_SIZE)        return NextResponse.json({ error: "File must be under 5 MB." }, { status: 400 });
+  if (!file)                        return NextResponse.json({ error: "No file uploaded." },           { status: 400 });
+  if (!ALLOWED.includes(file.type))  return NextResponse.json({ error: "Only JPG, PNG, or PDF files are accepted." }, { status: 400 });
+  if (file.size > MAX_SIZE)          return NextResponse.json({ error: "File must be under 5 MB." },            { status: 400 });
+  if (!await verifyMagicBytes(file)) return NextResponse.json({ error: "File content does not match its declared type." }, { status: 400 });
 
   const ext        = file.type === "application/pdf" ? ".pdf" : file.type === "image/png" ? ".png" : ".jpg";
   const filename   = `${Date.now()}-${params.id}${ext}`;

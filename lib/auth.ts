@@ -26,7 +26,7 @@ export const authOptions: NextAuthOptions = {
           (req?.headers?.["x-forwarded-for"] as string | undefined)
             ?.split(",")[0]
             ?.trim() ?? "unknown";
-        const rl = rateLimit(`login:${ip}`, 5, 15 * 60 * 1000);
+        const rl = await rateLimit(`login:${ip}`, 5, 15 * 60 * 1000);
         if (!rl.ok) throw new Error("TOO_MANY_ATTEMPTS");
 
         if (!credentials?.email || !credentials?.password) {

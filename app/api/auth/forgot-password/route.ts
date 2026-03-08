@@ -6,7 +6,7 @@ import { validateEmail } from "@/lib/validate-email";
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  const rl  = rateLimit(`forgot:${ip}`, 3, 60 * 60 * 1000);
+  const rl  = await rateLimit(`forgot:${ip}`, 3, 60 * 60 * 1000);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Too many requests. Please try again later." },

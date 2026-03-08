@@ -1,4 +1,14 @@
 /** @type {import('next').NextConfig} */
+
+const PRODUCTION_ORIGIN = "https://ruya.services";
+
+const corsHeaders = [
+  { key: "Access-Control-Allow-Origin",  value: PRODUCTION_ORIGIN },
+  { key: "Access-Control-Allow-Methods", value: "GET,POST,PATCH,PUT,DELETE,OPTIONS" },
+  { key: "Access-Control-Allow-Headers", value: "Content-Type, Authorization" },
+  { key: "Vary",                         value: "Origin" },
+];
+
 const securityHeaders = [
   { key: "X-Frame-Options",           value: "DENY" },
   { key: "X-Content-Type-Options",    value: "nosniff" },
@@ -9,6 +19,7 @@ const securityHeaders = [
 ];
 
 const nextConfig = {
+  productionBrowserSourceMaps: false,
   images: {
     remotePatterns: [
       {
@@ -26,6 +37,10 @@ const nextConfig = {
       {
         source: "/(.*)",
         headers: securityHeaders,
+      },
+      {
+        source: "/api/(.*)",
+        headers: corsHeaders,
       },
     ];
   },
