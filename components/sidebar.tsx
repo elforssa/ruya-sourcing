@@ -183,17 +183,15 @@ export function Sidebar({ role }: { role: "CLIENT" | "AGENT" | "ADMIN" }) {
 
       {/* ── Mobile top bar ── */}
       <header className="md:hidden fixed top-0 inset-x-0 z-40 flex h-14 items-center justify-between border-b border-sidebar-border bg-sidebar text-sidebar-foreground px-4">
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="rounded-lg p-2 hover:bg-sidebar-accent/60 transition-colors"
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
         <RuyaLogo />
-        <div className="flex items-center gap-1">
-          <NotificationBell />
-          <button
-            onClick={() => setMobileOpen(true)}
-            className="rounded-lg p-2 hover:bg-sidebar-accent/60 transition-colors"
-            aria-label="Open menu"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-        </div>
+        <NotificationBell />
       </header>
 
       {/* ── Mobile drawer overlay ── */}
