@@ -10,12 +10,7 @@ export default function HomePage() {
         className="sticky top-0 z-50 border-b border-white/10 backdrop-blur-sm">
         <div className="container mx-auto flex h-16 items-center justify-between px-6">
           {/* Logo */}
-          <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="RUYA" className="h-8 w-auto" />
-            <span className="text-lg font-bold tracking-[0.2em]" style={{ color: "#C9A84C" }}>
-              RUYA
-            </span>
-          </div>
+          <img src="/logo.png" alt="RUYA" className="h-8 w-auto" />
           {/* CTA */}
           <Link
             href="/auth/login"

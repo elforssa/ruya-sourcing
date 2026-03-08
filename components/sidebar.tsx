@@ -53,22 +53,7 @@ const ROLE_COLOR: Record<string, string> = {
 };
 
 function RuyaLogo() {
-  return (
-    <div className="flex items-center gap-2.5">
-      <img src="/logo.png" alt="RUYA" className="h-8 w-auto shrink-0" />
-      <div className="flex flex-col leading-none">
-        <span
-          className="text-lg font-bold tracking-widest"
-          style={{ color: "#C9A84C", letterSpacing: "0.2em" }}
-        >
-          RUYA
-        </span>
-        <span className="text-[10px] text-sidebar-foreground/40 tracking-wider uppercase">
-          Sourcing Platform
-        </span>
-      </div>
-    </div>
-  );
+  return <img src="/logo.png" alt="RUYA" className="h-8 w-auto" />;
 }
 
 function NavLinks({

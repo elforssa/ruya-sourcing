@@ -69,17 +69,7 @@ function LoginForm() {
 
         {/* Logo */}
         <div className="text-center mb-10">
-          <img src="/logo.png" alt="RUYA" className="h-16 w-auto mx-auto mb-5" />
-          <h1
-            className="text-5xl font-bold tracking-[0.3em]"
-            style={{ color: "#C9A84C", textShadow: "0 0 40px rgba(201,168,76,0.3)" }}
-          >
-            RUYA
-          </h1>
-          <p className="mt-2 text-xs tracking-[0.25em] uppercase"
-            style={{ color: "rgba(201,168,76,0.6)" }}>
-            Global Sourcing Platform
-          </p>
+          <img src="/logo.png" alt="RUYA" className="h-16 w-auto mx-auto" />
         </div>
 
         {/* Card */}
