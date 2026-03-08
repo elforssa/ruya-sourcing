@@ -84,31 +84,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="border-t border-white/10 bg-white/5">
-          <div className="container mx-auto px-6 py-16 text-center">
-            <h2 className="text-2xl font-bold text-white mb-3">Demo Accounts</h2>
-            <p className="text-white/50 mb-8 text-sm">Use these credentials to explore the platform</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
-              {[
-                { role: "Admin", email: "admin@ruya.com", color: "red" },
-                { role: "Agent", email: "agent@ruya.com", color: "purple" },
-                { role: "Client", email: "client@ruya.com", color: "green" },
-              ].map(({ role, email, color }) => (
-                <div key={role} className="rounded-xl border border-white/10 bg-white/5 p-5 text-left">
-                  <div className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium mb-3 ${
-                    color === "red" ? "bg-red-500/20 text-red-300" :
-                    color === "purple" ? "bg-purple-500/20 text-purple-300" :
-                    "bg-green-500/20 text-green-300"
-                  }`}>
-                    {role}
-                  </div>
-                  <p className="text-white text-sm font-medium">{email}</p>
-                  <p className="text-white/40 text-xs mt-1">password123</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+
       </main>
 
       <footer className="border-t border-white/10 py-8">
