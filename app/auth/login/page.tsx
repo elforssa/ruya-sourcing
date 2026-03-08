@@ -253,9 +253,30 @@ function LoginForm() {
         </div>
 
         {/* Footer */}
-        <p className="text-center mt-6 text-xs" style={{ color: "rgba(255,255,255,0.15)" }}>
-          © {new Date().getFullYear()} RUYA. All rights reserved.
-        </p>
+        <div className="mt-6 text-center space-y-2">
+          <div className="flex items-center justify-center gap-4 text-xs">
+            <a
+              href="/legal/terms"
+              style={{ color: "rgba(255,255,255,0.25)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(201,168,76,0.7)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.25)")}
+            >
+              Terms of Service
+            </a>
+            <span style={{ color: "rgba(255,255,255,0.12)" }}>·</span>
+            <a
+              href="/legal/privacy"
+              style={{ color: "rgba(255,255,255,0.25)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(201,168,76,0.7)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.25)")}
+            >
+              Privacy Policy
+            </a>
+          </div>
+          <p className="text-xs" style={{ color: "rgba(255,255,255,0.12)" }}>
+            © {new Date().getFullYear()} RUYA. All rights reserved.
+          </p>
+        </div>
       </div>
     </div>
   );
