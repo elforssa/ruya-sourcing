@@ -26,10 +26,15 @@ export const authOptions: NextAuthOptions = {
           (req?.headers?.["x-forwarded-for"] as string | undefined)
             ?.split(",")[0]
             ?.trim() ?? "unknown";
+
         const rl = await rateLimit(`login:${ip}`, 5, 15 * 60 * 1000);
-        if (!rl.ok) throw new Error("TOO_MANY_ATTEMPTS");
+        if (!rl.ok) {
+          console.warn(`[auth] rate-limit hit for ip=${ip}`);
+          throw new Error("TOO_MANY_ATTEMPTS");
+        }
 
         if (!credentials?.email || !credentials?.password) {
+          console.warn("[auth] missing email or password");
           throw new Error("Invalid credentials");
         }
 
@@ -37,7 +42,13 @@ export const authOptions: NextAuthOptions = {
           where: { email: credentials.email },
         });
 
-        if (!user || !user.password) {
+        if (!user) {
+          console.warn(`[auth] no user found for email=${credentials.email}`);
+          throw new Error("Invalid credentials");
+        }
+
+        if (!user.password) {
+          console.warn(`[auth] user has no password hash: email=${credentials.email}`);
           throw new Error("Invalid credentials");
         }
 
@@ -47,13 +58,16 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (!isPasswordValid) {
+          console.warn(`[auth] wrong password for email=${credentials.email}`);
           throw new Error("Invalid credentials");
         }
 
         if (!user.isActive) {
+          console.warn(`[auth] suspended account: email=${credentials.email}`);
           throw new Error("ACCOUNT_SUSPENDED");
         }
 
+        console.log(`[auth] login success: email=${credentials.email} role=${user.role}`);
         return {
           id: user.id,
           email: user.email,

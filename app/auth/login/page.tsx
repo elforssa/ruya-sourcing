@@ -42,6 +42,8 @@ function LoginForm() {
     if (!result?.ok) {
       if (result?.error === "ACCOUNT_SUSPENDED") {
         setError("Your account has been suspended. Contact support@ruya-sourcing.com");
+      } else if (result?.error === "TOO_MANY_ATTEMPTS") {
+        setError("Too many login attempts. Please wait 15 minutes before trying again.");
       } else {
         setError("Invalid email or password. Please try again.");
       }
