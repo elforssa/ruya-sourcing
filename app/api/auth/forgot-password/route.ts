@@ -30,8 +30,17 @@ export async function POST(req: NextRequest) {
   });
 
   if (user) {
+    const COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
+    const TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour (matches expiry below)
+    if (
+      user.resetTokenExpiry &&
+      user.resetTokenExpiry.getTime() > Date.now() + (TOKEN_TTL_MS - COOLDOWN_MS)
+    ) {
+      return NextResponse.json({ ok: true });
+    }
+
     const token = crypto.randomUUID();
-    const expiry = new Date(Date.now() + 60 * 60 * 1000);
+    const expiry = new Date(Date.now() + TOKEN_TTL_MS);
 
     await prisma.user.update({
       where: { id: user.id },
