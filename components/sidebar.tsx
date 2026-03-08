@@ -54,7 +54,7 @@ const ROLE_COLOR: Record<string, string> = {
 };
 
 function RuyaLogo() {
-  return <Image src="/logo.png" alt="RUYA" width={160} height={50} priority className="h-8 w-auto" />;
+  return <Image src="/logo.png" alt="RUYA" width={160} height={50} priority loading="eager" quality={85} className="h-8 w-auto" />;
 }
 
 function NavLinks({

@@ -21,6 +21,7 @@ const securityHeaders = [
 const nextConfig = {
   productionBrowserSourceMaps: false,
   images: {
+    formats: ["image/webp"],
     remotePatterns: [
       {
         protocol: "https",
