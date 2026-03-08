@@ -23,10 +23,15 @@ function getRedis(): Redis | null {
     _redis = null;
     return null;
   }
-  _redis = new Redis({
-    url:   process.env.UPSTASH_REDIS_REST_URL,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN,
-  });
+  try {
+    _redis = new Redis({
+      url:   process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
+  } catch (e) {
+    console.warn("[rate-limit] Redis init failed, falling back to in-memory:", e);
+    _redis = null;
+  }
   return _redis;
 }
 

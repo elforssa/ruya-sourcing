@@ -29,7 +29,12 @@ export const authOptions: NextAuthOptions = {
 
         console.log("[auth] authorize() called with email: " + credentials?.email);
 
-        const rl = await rateLimit(`login:${ip}`, 5, 15 * 60 * 1000);
+        let rl = { ok: true, remaining: 5, retryAfterMs: 0 };
+        try {
+          rl = await rateLimit(`login:${ip}`, 5, 15 * 60 * 1000);
+        } catch (rlErr: unknown) {
+          console.error("[auth] rate-limit ERROR (skipping): " + (rlErr instanceof Error ? rlErr.message : String(rlErr)));
+        }
         if (!rl.ok) {
           console.warn("[auth] rate-limit hit for ip=" + ip + " remaining=" + rl.remaining);
           throw new Error("TOO_MANY_ATTEMPTS");
