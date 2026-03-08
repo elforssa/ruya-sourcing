@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { sendVerificationEmail } from "@/lib/email";
 import { rateLimit } from "@/lib/rate-limit";
+import { validateEmail } from "@/lib/validate-email";
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
@@ -22,8 +23,10 @@ export async function POST(req: NextRequest) {
   if (password.length < 8) {
     return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
   }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
+
+  const emailCheck = await validateEmail(email);
+  if (!emailCheck.ok) {
+    return NextResponse.json({ error: emailCheck.error }, { status: 400 });
   }
 
   const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });

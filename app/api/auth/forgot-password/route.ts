@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendPasswordResetEmail } from "@/lib/email";
 import { rateLimit } from "@/lib/rate-limit";
+import { validateEmail } from "@/lib/validate-email";
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
@@ -17,6 +18,11 @@ export async function POST(req: NextRequest) {
 
   if (!email?.trim()) {
     return NextResponse.json({ error: "Email is required." }, { status: 400 });
+  }
+
+  const emailCheck = await validateEmail(email);
+  if (!emailCheck.ok) {
+    return NextResponse.json({ error: emailCheck.error }, { status: 400 });
   }
 
   const user = await prisma.user.findUnique({

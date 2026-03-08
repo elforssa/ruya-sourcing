@@ -31,8 +31,17 @@ export default function RegisterPage() {
   const [terms, setTerms] = useState(false);
   const [showPw, setShowPw] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [loading,    setLoading]    = useState(false);
+  const [error,      setError]      = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [emailTouched, setEmailTouched] = useState(false);
+
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const validateEmailClient = (val: string) => {
+    if (!val.trim()) { setEmailError(""); return; }
+    setEmailError(EMAIL_RE.test(val) ? "" : "Please enter a valid email address.");
+  };
 
   const strength = getStrength(password);
 
@@ -41,6 +50,11 @@ export default function RegisterPage() {
     setError("");
 
     if (!name.trim()) { setError("Full name is required."); return; }
+    if (emailError || !EMAIL_RE.test(email)) {
+      setEmailError("Please enter a valid email address.");
+      setEmailTouched(true);
+      return;
+    }
     if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
     if (password !== confirm) { setError("Passwords do not match."); return; }
     if (!terms) { setError("Please accept the terms of service to continue."); return; }
@@ -135,14 +149,22 @@ export default function RegisterPage() {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); if (emailTouched) validateEmailClient(e.target.value); }}
                 required
                 placeholder="you@example.com"
                 className="w-full rounded-lg px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none transition-all"
-                style={inputStyle}
+                style={emailTouched && emailError
+                  ? { ...inputStyle, borderColor: "rgba(239,68,68,0.6)" }
+                  : inputStyle
+                }
                 onFocus={focusBorder}
-                onBlur={blurBorder}
+                onBlur={(e) => { blurBorder(e); setEmailTouched(true); validateEmailClient(e.target.value); }}
               />
+              {emailTouched && emailError && (
+                <p className="mt-1.5 text-xs flex items-center gap-1" style={{ color: "#fca5a5" }}>
+                  <AlertCircle className="h-3 w-3" /> {emailError}
+                </p>
+              )}
             </div>
 
             {/* Password */}
@@ -283,13 +305,13 @@ export default function RegisterPage() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !!(emailTouched && emailError)}
               className="w-full rounded-lg py-3 text-sm font-bold tracking-wider uppercase transition-all mt-1 flex items-center justify-center gap-2"
               style={{
-                background: loading ? "rgba(201,168,76,0.4)" : "#C9A84C",
-                color: loading ? "rgba(11,31,59,0.6)" : "#0B1F3B",
-                cursor: loading ? "not-allowed" : "pointer",
-                boxShadow: loading ? "none" : "0 4px 20px rgba(201,168,76,0.3)",
+                background: (loading || !!(emailTouched && emailError)) ? "rgba(201,168,76,0.4)" : "#C9A84C",
+                color: (loading || !!(emailTouched && emailError)) ? "rgba(11,31,59,0.6)" : "#0B1F3B",
+                cursor: (loading || !!(emailTouched && emailError)) ? "not-allowed" : "pointer",
+                boxShadow: (loading || !!(emailTouched && emailError)) ? "none" : "0 4px 20px rgba(201,168,76,0.3)",
               }}
             >
               {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Creating account…</> : "Create Account"}
