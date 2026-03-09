@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import {
@@ -54,7 +53,7 @@ const ROLE_COLOR: Record<string, string> = {
 };
 
 function RuyaLogo() {
-  return <Image src="/logo.png" alt="RUYA" width={160} height={50} priority loading="eager" quality={85} unoptimized className="h-8 w-auto" />;
+  return <img src="/logo.png" alt="RUYA" className="h-8 w-auto" />;
 }
 
 function NavLinks({

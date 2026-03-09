@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { ClipboardList, FileCheck, PackageCheck, Users, Eye, ShieldCheck } from "lucide-react";
 
 export default function HomePage() {
@@ -11,7 +10,7 @@ export default function HomePage() {
         className="sticky top-0 z-50 border-b border-white/10 backdrop-blur-sm">
         <div className="container mx-auto flex h-16 items-center justify-between px-6">
           {/* Logo */}
-          <Image src="/logo.png" alt="RUYA" width={160} height={50} priority loading="eager" quality={85} unoptimized className="h-8 w-auto" />
+          <img src="/logo.png" alt="RUYA" className="h-8 w-auto" />
           {/* CTA */}
           <Link
             href="/auth/login"
@@ -38,7 +37,7 @@ export default function HomePage() {
 
         <div className="relative mx-auto max-w-3xl">
           {/* Logo */}
-          <Image src="/logo.png" alt="RUYA" width={160} height={50} priority loading="eager" quality={85} unoptimized className="h-20 w-auto mx-auto mb-6" />
+          <img src="/logo.png" alt="RUYA" className="h-20 w-auto mx-auto mb-6" />
 
           {/* Badge */}
           <div
