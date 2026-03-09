@@ -10,6 +10,9 @@ const REQUIRED = [
   "DIRECT_URL",
   "NEXTAUTH_URL",
   "RESEND_API_KEY",
+  "CLOUDINARY_CLOUD_NAME",
+  "CLOUDINARY_API_KEY",
+  "CLOUDINARY_API_SECRET",
 ] as const;
 
 type RequiredEnv = (typeof REQUIRED)[number];

@@ -59,7 +59,7 @@ export async function PATCH(
           requestId: quotation.requestId,
           quotationId: params.id,
           clientId: session.user.id,
-          status: "CONFIRMED",
+          status: "PAYMENT_PENDING",
         },
       }),
     ]);

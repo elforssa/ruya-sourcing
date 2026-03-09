@@ -4,8 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendPaymentReceiptNotification } from "@/lib/email";
 import { createNotification } from "@/lib/notifications";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
+import cloudinary from "@/lib/cloudinary";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 const ALLOWED  = ["image/jpeg", "image/png", "application/pdf"];
@@ -50,16 +49,18 @@ export async function POST(
   if (file.size > MAX_SIZE)          return NextResponse.json({ error: "File must be under 5 MB." },            { status: 400 });
   if (!await verifyMagicBytes(file)) return NextResponse.json({ error: "File content does not match its declared type." }, { status: 400 });
 
-  const ext        = file.type === "application/pdf" ? ".pdf" : file.type === "image/png" ? ".png" : ".jpg";
-  const filename   = `${Date.now()}-${params.id}${ext}`;
-  const uploadDir  = join(process.cwd(), "public", "uploads", "receipts");
-  const filePath   = join(uploadDir, filename);
+  const bytes  = await file.arrayBuffer();
+  const buffer  = Buffer.from(bytes);
 
-  await mkdir(uploadDir, { recursive: true });
-  const bytes = await file.arrayBuffer();
-  await writeFile(filePath, Buffer.from(bytes));
+  const uploaded = await new Promise<{ secure_url: string }>((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: "ruya/receipts", resource_type: "auto" },
+      (err, result) => (err || !result ? reject(err) : resolve(result as { secure_url: string }))
+    );
+    stream.end(buffer);
+  });
 
-  const receiptUrl = `/uploads/receipts/${filename}`;
+  const receiptUrl = uploaded.secure_url;
 
   await prisma.order.update({
     where: { id: params.id },
