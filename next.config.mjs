@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 
-const PRODUCTION_ORIGIN = "https://ruya.services";
+const PRODUCTION_ORIGIN = "https://www.ruya.services";
 
 const corsHeaders = [
   { key: "Access-Control-Allow-Origin",  value: PRODUCTION_ORIGIN },
