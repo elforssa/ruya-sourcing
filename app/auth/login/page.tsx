@@ -69,7 +69,7 @@ function LoginForm() {
 
         {/* Logo */}
         <div className="text-center mb-10">
-          <img src="/logo.png" alt="RUYA" className="h-16 w-auto mx-auto" />
+          <img src="/logo-v2.png" alt="RUYA" className="h-16 w-auto mx-auto" />
         </div>
 
         {/* Card */}

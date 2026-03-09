@@ -90,7 +90,7 @@ export default function RegisterPage() {
 
         {/* Logo */}
         <div className="text-center mb-8">
-          <img src="/logo.png" alt="RUYA" className="h-14 w-auto mx-auto" />
+          <img src="/logo-v2.png" alt="RUYA" className="h-14 w-auto mx-auto" />
         </div>
 
         {/* Card */}

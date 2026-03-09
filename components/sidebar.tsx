@@ -53,7 +53,7 @@ const ROLE_COLOR: Record<string, string> = {
 };
 
 function RuyaLogo() {
-  return <img src="/logo.png" alt="RUYA" className="h-8 w-auto" />;
+  return <img src="/logo-v2.png" alt="RUYA" className="h-8 w-auto" />;
 }
 
 function NavLinks({

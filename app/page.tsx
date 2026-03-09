@@ -10,7 +10,7 @@ export default function HomePage() {
         className="sticky top-0 z-50 border-b border-white/10 backdrop-blur-sm">
         <div className="container mx-auto flex h-16 items-center justify-between px-6">
           {/* Logo */}
-          <img src="/logo.png" alt="RUYA" className="h-8 w-auto" />
+          <img src="/logo-v2.png" alt="RUYA" className="h-8 w-auto" />
           {/* CTA */}
           <Link
             href="/auth/login"
@@ -37,7 +37,7 @@ export default function HomePage() {
 
         <div className="relative mx-auto max-w-3xl">
           {/* Logo */}
-          <img src="/logo.png" alt="RUYA" className="h-20 w-auto mx-auto mb-6" />
+          <img src="/logo-v2.png" alt="RUYA" className="h-20 w-auto mx-auto mb-6" />
 
           {/* Badge */}
           <div
