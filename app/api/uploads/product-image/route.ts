@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
   const uploaded = await new Promise<{ secure_url: string }>((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder: "ruya/products", resource_type: "image" },
+      { folder: "ruya", resource_type: "image" },
       (err, result) => (err || !result ? reject(err) : resolve(result as { secure_url: string }))
     );
     stream.end(buffer);
