@@ -36,7 +36,6 @@ export default async function AdminOrderDetailPage({
       client:  { select: { name: true, email: true } },
       quotation: {
         select: {
-          supplierName: true,
           supplierLocation: true,
           unitPrice: true,
           totalPrice: true,
@@ -102,14 +101,10 @@ export default async function AdminOrderDetailPage({
           </div>
 
           <div className="mt-5 pt-5 border-t grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Supplier</p>
-              <p className="font-semibold">{order.quotation.supplierName ?? "—"}</p>
-            </div>
             <div className="flex items-start gap-1.5">
               <MapPin className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Location</p>
+                <p className="text-xs text-muted-foreground mb-1">Supplier Location</p>
                 <p className="font-semibold">{order.quotation.supplierLocation ?? "—"}</p>
               </div>
             </div>

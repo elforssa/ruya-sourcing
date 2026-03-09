@@ -90,7 +90,6 @@ async function main() {
     data: {
       unitPrice: 16.8,
       totalPrice: 8400,
-      supplierName: "Shenzhen AudioTech Co.",
       supplierLocation: "Shenzhen, China",
       estimatedLeadTime: 25,
       shippingCostEstimate: 320,

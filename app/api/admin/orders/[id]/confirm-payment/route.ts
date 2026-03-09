@@ -27,7 +27,6 @@ export async function POST(
           unitPrice: true,
           totalPrice: true,
           shippingCostEstimate: true,
-          supplierName: true,
         },
       },
     },
@@ -54,7 +53,6 @@ export async function POST(
     unitPrice:     order.quotation.unitPrice,
     totalPrice:    order.quotation.totalPrice,
     shippingCost:  order.quotation.shippingCostEstimate,
-    supplierName:  order.quotation.supplierName,
     orderId:       params.id,
   });
 

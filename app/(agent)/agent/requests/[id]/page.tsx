@@ -187,15 +187,12 @@ export default async function AgentRequestDetailPage({
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 text-sm">
-                {(latestQuotation.supplierName || latestQuotation.supplierLocation) && (
+                {latestQuotation.supplierLocation && (
                   <div className="rounded-lg bg-muted/50 px-4 py-3">
-                    <p className="text-xs text-muted-foreground mb-1">Supplier</p>
-                    {latestQuotation.supplierName && <p className="font-semibold">{latestQuotation.supplierName}</p>}
-                    {latestQuotation.supplierLocation && (
-                      <p className="flex items-center gap-1 text-muted-foreground mt-0.5 text-xs">
-                        <MapPin className="h-3 w-3" />{latestQuotation.supplierLocation}
-                      </p>
-                    )}
+                    <p className="text-xs text-muted-foreground mb-1">Supplier Location</p>
+                    <p className="flex items-center gap-1 text-muted-foreground text-xs">
+                      <MapPin className="h-3 w-3" />{latestQuotation.supplierLocation}
+                    </p>
                   </div>
                 )}
                 <div className="space-y-2">
@@ -258,7 +255,6 @@ export default async function AgentRequestDetailPage({
                   requestId={params.id}
                   quantity={request.quantity}
                   prefill={isRevision ? {
-                    supplierName: latestQuotation?.supplierName ?? null,
                     supplierLocation: latestQuotation?.supplierLocation ?? null,
                     unitPrice: latestQuotation?.unitPrice ?? 0,
                     estimatedLeadTime: latestQuotation?.estimatedLeadTime ?? null,
@@ -286,7 +282,7 @@ export default async function AgentRequestDetailPage({
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-semibold bg-muted rounded px-2 py-0.5">v{q.version}</span>
-                        {q.supplierName && <span className="font-medium">{q.supplierName}</span>}
+                        {q.supplierLocation && <span className="text-muted-foreground text-xs flex items-center gap-1"><MapPin className="h-3 w-3" />{q.supplierLocation}</span>}
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-muted-foreground">{formatDate(q.createdAt)}</span>

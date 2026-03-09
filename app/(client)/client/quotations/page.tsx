@@ -38,7 +38,7 @@ export default async function ClientQuotationsPage() {
                   <div>
                     <CardTitle className="text-base">{q.request.productName}</CardTitle>
                     <p className="text-sm text-muted-foreground mt-1">
-                      By {q.agent.name}{q.supplierName ? ` · ${q.supplierName}` : ""}
+                      By {q.agent.name}
                     </p>
                   </div>
                   <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(q.status)}`}>

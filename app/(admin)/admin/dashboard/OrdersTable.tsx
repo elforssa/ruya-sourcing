@@ -32,7 +32,6 @@ interface Order {
   client: { name: string | null };
   quotation: {
     totalPrice: number;
-    supplierName: string | null;
     agent: { name: string | null };
   };
 }
@@ -99,7 +98,6 @@ export default function OrdersTable({ orders }: { orders: Order[] }) {
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
                   <span>Client: {order.client.name ?? "—"}</span>
                   <span>Agent: {order.quotation.agent.name ?? "—"}</span>
-                  <span>Supplier: {order.quotation.supplierName ?? "—"}</span>
                   <span className="font-semibold text-foreground">{formatCurrency(order.quotation.totalPrice)}</span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -120,7 +118,6 @@ export default function OrdersTable({ orders }: { orders: Order[] }) {
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Product</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Client</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Agent</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Supplier</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Total</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Shipping Mark</th>
@@ -135,7 +132,6 @@ export default function OrdersTable({ orders }: { orders: Order[] }) {
                     <td className="px-4 py-3 font-medium">{order.request.productName}</td>
                     <td className="px-4 py-3 text-muted-foreground">{order.client.name ?? "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground">{order.quotation.agent.name ?? "—"}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{order.quotation.supplierName ?? "—"}</td>
                     <td className="px-4 py-3 font-semibold">{formatCurrency(order.quotation.totalPrice)}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(order.status)}`}>

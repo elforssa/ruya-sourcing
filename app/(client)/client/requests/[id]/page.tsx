@@ -258,15 +258,12 @@ export default async function RequestDetailPage({
           <CardContent className="space-y-5">
 
             {/* Supplier */}
-            {(quotation.supplierName || quotation.supplierLocation) && (
+            {quotation.supplierLocation && (
               <div className="rounded-lg bg-background border border-border px-4 py-3 text-sm">
-                <p className="text-xs text-muted-foreground mb-1">Supplier</p>
-                {quotation.supplierName && <p className="font-semibold text-base">{quotation.supplierName}</p>}
-                {quotation.supplierLocation && (
-                  <p className="flex items-center gap-1 text-muted-foreground mt-0.5">
-                    <MapPin className="h-3 w-3" />{quotation.supplierLocation}
-                  </p>
-                )}
+                <p className="text-xs text-muted-foreground mb-1">Supplier Location</p>
+                <p className="flex items-center gap-1 font-medium">
+                  <MapPin className="h-3 w-3" />{quotation.supplierLocation}
+                </p>
               </div>
             )}
 
@@ -373,7 +370,7 @@ export default async function RequestDetailPage({
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold bg-muted rounded px-2 py-0.5">v{q.version}</span>
-                    {q.supplierName && <span className="font-medium">{q.supplierName}</span>}
+                    {q.supplierLocation && <span className="text-muted-foreground text-xs flex items-center gap-1"><MapPin className="h-3 w-3" />{q.supplierLocation}</span>}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground">{formatDate(q.createdAt)}</span>

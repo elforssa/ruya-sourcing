@@ -142,7 +142,7 @@ export default async function ClientDashboard() {
             {/* Mobile cards */}
             <div className="sm:hidden divide-y">
               {recentRequests.map((req) => (
-                <div key={req.id} className="px-4 py-3 space-y-2">
+                <Link key={req.id} href={`/client/requests/${req.id}`} className="block px-4 py-3 space-y-2 hover:bg-muted/40 transition-colors cursor-pointer">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="font-medium text-foreground truncate">{req.productName}</p>
@@ -150,16 +150,19 @@ export default async function ClientDashboard() {
                         <p className="text-xs text-muted-foreground">{req.destinationCountry}</p>
                       )}
                     </div>
-                    <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusColor(req.status)}`}>
-                      {req.status.replace(/_/g, " ")}
-                    </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusColor(req.status)}`}>
+                        {req.status.replace(/_/g, " ")}
+                      </span>
+                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                    </div>
                   </div>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <span>{req.quantity.toLocaleString()} units</span>
                     {req.targetPrice && <span>{formatCurrency(req.targetPrice)}</span>}
                     <span>{formatDate(req.createdAt)}</span>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
             {/* Desktop table */}
@@ -177,10 +180,12 @@ export default async function ClientDashboard() {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {recentRequests.map((req) => (
-                    <tr key={req.id} className="hover:bg-muted/30 transition-colors">
+                    <tr key={req.id} className="hover:bg-muted/30 transition-colors cursor-pointer group">
                       <td className="px-6 py-4">
-                        <p className="font-medium text-foreground">{req.productName}</p>
-                        {req.destinationCountry && <p className="text-xs text-muted-foreground mt-0.5">{req.destinationCountry}</p>}
+                        <Link href={`/client/requests/${req.id}`} className="block">
+                          <p className="font-medium text-foreground group-hover:text-primary transition-colors">{req.productName}</p>
+                          {req.destinationCountry && <p className="text-xs text-muted-foreground mt-0.5">{req.destinationCountry}</p>}
+                        </Link>
                       </td>
                       <td className="px-4 py-4 hidden md:table-cell">
                         <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">{req.serviceType.replace(/_/g, " ")}</span>
@@ -189,7 +194,12 @@ export default async function ClientDashboard() {
                       <td className="px-4 py-4 text-right text-muted-foreground hidden lg:table-cell">{req.targetPrice ? formatCurrency(req.targetPrice) : "—"}</td>
                       <td className="px-4 py-4 text-muted-foreground">{formatDate(req.createdAt)}</td>
                       <td className="px-6 py-4 text-right">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusColor(req.status)}`}>{req.status.replace(/_/g, " ")}</span>
+                        <div className="flex items-center justify-end gap-2">
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusColor(req.status)}`}>{req.status.replace(/_/g, " ")}</span>
+                          <Link href={`/client/requests/${req.id}`}>
+                            <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   ))}

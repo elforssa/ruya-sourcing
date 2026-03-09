@@ -22,7 +22,6 @@ export interface InvoiceData {
   unitPrice: number;
   totalPrice: number;
   shippingCost?: number | null;
-  supplierName?: string | null;
   orderId: string;
 }
 
@@ -116,13 +115,6 @@ export async function generateInvoicePDF(data: InvoiceData): Promise<Buffer> {
   page.drawRectangle({ x: 40, y: y - 8, width: 190, height: 48, borderColor: GREEN, borderWidth: 2, color: rgb(0.94, 1, 0.96) });
   page.drawText("✓  PAYMENT CONFIRMED", { x: 52, y: y + 20, font: bold,    size: 11, color: GREEN });
   page.drawText(data.date,              { x: 52, y: y + 4,  font: regular, size: 8,  color: GREEN });
-
-  // ── Supplier note ──────────────────────────────────────────────────────────
-  if (data.supplierName) {
-    page.drawText(`Supplied by: ${data.supplierName}`, {
-      x: 260, y: y + 14, font: regular, size: 8, color: GRAY,
-    });
-  }
 
   // ── Footer ─────────────────────────────────────────────────────────────────
   page.drawLine({ start: { x: 40, y: 55 }, end: { x: width - 40, y: 55 }, thickness: 0.5, color: LIGHT_GRAY });

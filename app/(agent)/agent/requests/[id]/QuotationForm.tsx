@@ -8,7 +8,6 @@ type Props = {
   requestId: string;
   quantity: number;
   prefill?: {
-    supplierName: string | null;
     supplierLocation: string | null;
     unitPrice: number;
     estimatedLeadTime: number | null;
@@ -23,7 +22,6 @@ export default function QuotationForm({ requestId, quantity, prefill, isRevision
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const [supplierName, setSupplierName] = useState(prefill?.supplierName ?? "");
   const [supplierLocation, setSupplierLocation] = useState(prefill?.supplierLocation ?? "");
   const [unitPrice, setUnitPrice] = useState(prefill?.unitPrice?.toString() ?? "");
   const [totalPrice, setTotalPrice] = useState("");
@@ -53,7 +51,6 @@ export default function QuotationForm({ requestId, quantity, prefill, isRevision
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          supplierName,
           supplierLocation,
           unitPrice,
           totalPrice,
@@ -77,31 +74,17 @@ export default function QuotationForm({ requestId, quantity, prefill, isRevision
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       {/* Supplier */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wider">
-            Supplier Name
-          </label>
-          <input
-            type="text"
-            value={supplierName}
-            onChange={(e) => setSupplierName(e.target.value)}
-            placeholder="e.g. Shenzhen AudioTech Co."
-            className={field}
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wider">
-            Supplier Location
-          </label>
-          <input
-            type="text"
-            value={supplierLocation}
-            onChange={(e) => setSupplierLocation(e.target.value)}
-            placeholder="e.g. Shenzhen, China"
-            className={field}
-          />
-        </div>
+      <div>
+        <label className="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wider">
+          Supplier Location
+        </label>
+        <input
+          type="text"
+          value={supplierLocation}
+          onChange={(e) => setSupplierLocation(e.target.value)}
+          placeholder="e.g. Shenzhen, China"
+          className={field}
+        />
       </div>
 
       {/* Pricing */}

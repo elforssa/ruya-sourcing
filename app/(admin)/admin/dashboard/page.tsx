@@ -36,7 +36,6 @@ export default async function AdminDashboard() {
         quotation: {
           select: {
             totalPrice: true,
-            supplierName: true,
             agent: { select: { name: true } },
           },
         },

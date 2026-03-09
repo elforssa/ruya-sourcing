@@ -30,7 +30,7 @@ export async function POST(
   }
 
   const body = await req.json();
-  const { supplierName, supplierLocation, unitPrice, totalPrice, estimatedLeadTime, shippingCostEstimate, notes } = body;
+  const { supplierLocation, unitPrice, totalPrice, estimatedLeadTime, shippingCostEstimate, notes } = body;
 
   if (!unitPrice || isNaN(parseFloat(unitPrice))) {
     return NextResponse.json({ error: "Unit price is required" }, { status: 400 });
@@ -45,7 +45,6 @@ export async function POST(
       data: {
         requestId: params.id,
         agentId: session.user.id,
-        supplierName: supplierName?.trim() || null,
         supplierLocation: supplierLocation?.trim() || null,
         unitPrice: parseFloat(unitPrice),
         totalPrice: parseFloat(totalPrice),

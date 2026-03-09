@@ -120,7 +120,6 @@ model Quotation {
 
   unitPrice            Float
   totalPrice           Float
-  supplierName         String?
   supplierLocation     String?
   estimatedLeadTime    Int?
   shippingCostEstimate Float?
