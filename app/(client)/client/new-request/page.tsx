@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Globe,
@@ -14,7 +14,9 @@ import {
   Loader2,
   CheckCircle2,
   ArrowRight,
-  Package,
+  Upload,
+  Link2,
+  ImageIcon,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
@@ -25,7 +27,6 @@ type FormData = {
   targetPrice: string;
   destinationCountry: string;
   serviceType: "FULL_SOURCING" | "PRICE_CHECK" | "INSPECTION" | "";
-  referenceImages: string[];
   notes: string;
 };
 
@@ -60,11 +61,11 @@ const STEPS = ["Product Details", "Service Type", "Review & Submit"];
 
 export default function NewRequestPage() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [requestId, setRequestId] = useState("");
-  const [imageInput, setImageInput] = useState("");
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
   const [formData, setFormData] = useState<FormData>({
@@ -74,9 +75,15 @@ export default function NewRequestPage() {
     targetPrice: "",
     destinationCountry: "",
     serviceType: "",
-    referenceImages: [],
     notes: "",
   });
+
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [imageError, setImageError] = useState("");
+  const [linkInput, setLinkInput] = useState("");
+  const [referenceLinks, setReferenceLinks] = useState<string[]>([]);
+  const [linkError, setLinkError] = useState("");
 
   const update = (field: keyof FormData, value: string | string[]) =>
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -110,25 +117,55 @@ export default function NewRequestPage() {
     setStep((s) => s + 1);
   };
 
-  const addImage = () => {
-    const url = imageInput.trim();
-    if (!url) return;
-    try { new URL(url); } catch { setErrors((e) => ({ ...e, referenceImages: "Enter a valid URL." })); return; }
-    update("referenceImages", [...formData.referenceImages, url]);
-    setImageInput("");
-    clearError("referenceImages");
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    const toUpload = files.slice(0, 5 - uploadedImages.length);
+    setUploading(true);
+    setImageError("");
+    for (const file of toUpload) {
+      const fd = new window.FormData();
+      fd.append("image", file);
+      try {
+        const res = await fetch("/api/uploads/product-image", { method: "POST", body: fd });
+        const data = await res.json();
+        if (res.ok) {
+          setUploadedImages((prev) => [...prev, data.url]);
+        } else {
+          setImageError(data.error || "Upload failed.");
+        }
+      } catch {
+        setImageError("Upload failed. Please try again.");
+      }
+    }
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const removeImage = (idx: number) =>
-    update("referenceImages", formData.referenceImages.filter((_, i) => i !== idx));
+  const removeUploadedImage = (idx: number) =>
+    setUploadedImages((prev) => prev.filter((_, i) => i !== idx));
+
+  const addLink = () => {
+    const url = linkInput.trim();
+    if (!url) return;
+    try { new URL(url); } catch { setLinkError("Enter a valid URL."); return; }
+    if (referenceLinks.length >= 5) { setLinkError("Maximum 5 links allowed."); return; }
+    setReferenceLinks((prev) => [...prev, url]);
+    setLinkInput("");
+    setLinkError("");
+  };
+
+  const removeLink = (idx: number) =>
+    setReferenceLinks((prev) => prev.filter((_, i) => i !== idx));
 
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
+      const allRefs = [...uploadedImages, ...referenceLinks];
       const res = await fetch("/api/client/requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, referenceImages: allRefs }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Submission failed");
@@ -350,7 +387,7 @@ export default function NewRequestPage() {
           </div>
         )}
 
-        {/* ── STEP 3: Images + Notes + Review ── */}
+        {/* ── STEP 3: Review & Submit ── */}
         {step === 3 && (
           <div className="p-6 space-y-6">
             <h2 className="text-lg font-semibold">Review & Submit</h2>
@@ -390,35 +427,117 @@ export default function NewRequestPage() {
               )}
             </div>
 
-            {/* Reference images */}
-            <div>
-              <label className="block text-sm font-medium mb-1.5">Reference Image URLs</label>
-              <p className="text-xs text-muted-foreground mb-3">Paste links to product images or references (optional).</p>
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="url"
-                  value={imageInput}
-                  onChange={(e) => { setImageInput(e.target.value); clearError("referenceImages"); }}
-                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addImage())}
-                  placeholder="https://example.com/product-image.jpg"
-                  className={`flex-1 rounded-lg border px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 ${errors.referenceImages ? "border-destructive" : "border-input"}`}
-                />
+            {/* Section A: Product Images */}
+            <div className="rounded-xl border border-border p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                  <p className="text-sm font-semibold">Product Images</p>
+                </div>
+                <span className="text-xs text-muted-foreground">{uploadedImages.length}/5</span>
+              </div>
+              <p className="text-xs text-muted-foreground">Upload product photos (JPG, PNG, WEBP · max 10 MB each). Optional.</p>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                className="hidden"
+                onChange={handleImageUpload}
+              />
+
+              {uploadedImages.length < 5 && (
                 <button
                   type="button"
-                  onClick={addImage}
-                  className="inline-flex items-center gap-1 rounded-lg px-3 py-2.5 bg-primary text-primary-foreground text-sm font-medium hover:opacity-90"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="inline-flex items-center gap-2 rounded-lg border border-dashed border-border px-4 py-2.5 text-sm font-medium text-muted-foreground hover:border-primary hover:text-primary transition-colors disabled:opacity-50 disabled:pointer-events-none"
                 >
-                  <Plus className="h-4 w-4" /> Add
+                  {uploading ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Uploading…</>
+                  ) : (
+                    <><Upload className="h-4 w-4" /> Upload Image</>
+                  )}
                 </button>
+              )}
+
+              {imageError && <p className="text-xs text-destructive">{imageError}</p>}
+
+              {uploadedImages.length > 0 && (
+                <div className="flex flex-wrap gap-3 pt-1">
+                  {uploadedImages.map((url, i) => (
+                    <div key={i} className="relative shrink-0">
+                      <img
+                        src={url}
+                        alt={`Product image ${i + 1}`}
+                        className="h-20 w-20 object-cover rounded-lg border border-border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeUploadedImage(i)}
+                        className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-white flex items-center justify-center shadow-sm"
+                        aria-label="Remove image"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Section B: Reference Links */}
+            <div className="rounded-xl border border-border p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Link2 className="h-4 w-4 text-muted-foreground" />
+                  <p className="text-sm font-semibold">Reference Links</p>
+                </div>
+                <span className="text-xs text-muted-foreground">{referenceLinks.length}/5</span>
               </div>
-              {errors.referenceImages && <p className="text-xs text-destructive mb-2">{errors.referenceImages}</p>}
-              {formData.referenceImages.length > 0 && (
+              <p className="text-xs text-muted-foreground">Paste links to product pages or references (e.g. Alibaba, Amazon). Optional.</p>
+
+              {referenceLinks.length < 5 && (
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    value={linkInput}
+                    onChange={(e) => { setLinkInput(e.target.value); setLinkError(""); }}
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addLink())}
+                    placeholder="https://alibaba.com/product..."
+                    className={`flex-1 rounded-lg border px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all ${linkError ? "border-destructive" : "border-input"}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={addLink}
+                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2.5 bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-all shrink-0"
+                  >
+                    <Plus className="h-4 w-4" /> Add
+                  </button>
+                </div>
+              )}
+
+              {linkError && <p className="text-xs text-destructive">{linkError}</p>}
+
+              {referenceLinks.length > 0 && (
                 <div className="space-y-1.5">
-                  {formData.referenceImages.map((url, i) => (
+                  {referenceLinks.map((url, i) => (
                     <div key={i} className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2 text-xs">
-                      <Package className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      <span className="flex-1 truncate text-muted-foreground">{url}</span>
-                      <button onClick={() => removeImage(i)} className="text-muted-foreground hover:text-destructive ml-1">
+                      <Link2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 truncate text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        {url}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => removeLink(i)}
+                        className="text-muted-foreground hover:text-destructive ml-1 shrink-0"
+                      >
                         <X className="h-3.5 w-3.5" />
                       </button>
                     </div>
