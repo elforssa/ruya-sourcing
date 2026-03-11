@@ -2,7 +2,7 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const FROM     = process.env.EMAIL_FROM ?? "RUYA Sourcing <noreply@ruya.services>";
+const FROM     = process.env.EMAIL_FROM ?? "RUYA Sourcing <noreply@mail.ruya.services>";
 const BASE_URL = process.env.NEXTAUTH_URL ?? "https://ruya.services";
 // During development/testing with Resend free tier, set DEV_EMAIL_TO to your
 // Resend account email to receive all notifications regardless of recipient.
