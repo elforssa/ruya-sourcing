@@ -20,6 +20,44 @@ const logEmailAttempt = (name: string, actualTo: string, subject: string) => {
   });
 };
 
+const FOOTER_HTML = `
+  <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;line-height:1.6;text-align:center;">
+    RUYA Sourcing Platform | ruya.services<br />
+    You received this email because you have an account on RUYA.
+  </p>
+`;
+
+const FOOTER_TEXT = `RUYA Sourcing Platform | ruya.services
+You received this email because you have an account on RUYA.`;
+
+const baseText = (content: string) => `${content.trim()}\n\n${FOOTER_TEXT}`;
+
+const sendEmail = async ({
+  name,
+  to,
+  subject,
+  html,
+  text,
+  attachments,
+}: {
+  name: string;
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+  attachments?: { filename: string; content: Buffer }[];
+}) => {
+  logEmailAttempt(name, to, subject);
+  return resend.emails.send({
+    from: FROM,
+    to: resolveRecipient(to),
+    subject,
+    html,
+    text,
+    attachments,
+  });
+};
+
 // ─── Shared styles ───────────────────────────────────────────────────────────
 
 const base = (content: string) => `
@@ -56,10 +94,7 @@ const base = (content: string) => `
           <!-- Footer -->
           <tr>
             <td style="background:#f8f9fb;border-top:1px solid #eaecf0;padding:20px 40px;text-align:center;">
-              <p style="margin:0;font-size:12px;color:#9ca3af;">
-                This is an automated message from RUYA Sourcing Platform.<br />
-                Please do not reply to this email.
-              </p>
+              ${FOOTER_HTML}
             </td>
           </tr>
 
@@ -143,13 +178,24 @@ export async function sendNewRequestEmail(
 
   const link = `${BASE_URL}/agent/requests/${requestId}`;
   const subject = `New request assigned: ${productName}`;
+  const text = baseText(`Hello, ${agentName}
+
+You have a new request.
+
+A client has submitted a sourcing request and it is now in your queue. Review the details and submit your quotation.
+
+Product: ${productName}
+Client: ${clientName}
+Request ID: #${requestId.slice(-10).toUpperCase()}
+
+View request: ${link}`);
 
   try {
-  logEmailAttempt("sendNewRequestEmail", agentEmail, subject);
-  const result = await resend.emails.send({
-    from: FROM,
-    to: resolveRecipient(agentEmail),
+  const result = await sendEmail({
+    name: "sendNewRequestEmail",
+    to: agentEmail,
     subject,
+    text,
     html: base(`
       <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${agentName} 👋</p>
       <h2 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#0f2044;">You have a new request</h2>
@@ -195,14 +241,27 @@ export async function sendQuotationReceivedEmail(
   const heading = isRevision ? "Your revised quotation is ready" : "Your quotation is ready";
   const body = isRevision
     ? `<strong>${agentName}</strong> has submitted a revised quotation for your sourcing request based on your feedback. Review the updated pricing and details.`
-    : `Great news! <strong>${agentName}</strong> has submitted a quotation for your sourcing request. Review the pricing, lead time, and supplier details, then accept, request a revision, or reject.`;
+    : `<strong>${agentName}</strong> has submitted a quotation for your sourcing request. Review the pricing, lead time, and supplier details, then accept, request a revision, or reject.`;
+  const text = baseText(`Hello, ${clientName}
+
+${heading}.
+
+${isRevision
+  ? `${agentName} has submitted a revised quotation for your sourcing request based on your feedback. Review the updated pricing and details.`
+  : `${agentName} has submitted a quotation for your sourcing request. Review the pricing, lead time, and supplier details, then accept, request a revision, or reject.`}
+
+Product: ${productName}
+Agent: ${agentName}
+Request ID: #${requestId.slice(-10).toUpperCase()}
+
+Review quotation: ${link}`);
 
   try {
-  logEmailAttempt("sendQuotationReceivedEmail", clientEmail, subject);
-  const result = await resend.emails.send({
-    from: FROM,
-    to: resolveRecipient(clientEmail),
+  const result = await sendEmail({
+    name: "sendQuotationReceivedEmail",
+    to: clientEmail,
     subject,
+    text,
     html: base(`
       <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${clientName} 👋</p>
       <h2 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#0f2044;">${heading}</h2>
@@ -240,16 +299,28 @@ export async function sendQuotationAcceptedEmail(
 
   const link = `${BASE_URL}/agent/requests/${requestId}`;
   const subject = `Quotation accepted: ${productName}`;
+  const text = baseText(`Hello, ${agentName}
+
+Quotation accepted.
+
+${clientName} has accepted your quotation for ${productName}. An order has been created automatically. Proceed with the sourcing process.
+
+Product: ${productName}
+Client: ${clientName}
+Request ID: #${requestId.slice(-10).toUpperCase()}
+Next step: Process the order
+
+View request: ${link}`);
 
   try {
-  logEmailAttempt("sendQuotationAcceptedEmail", agentEmail, subject);
-  const result = await resend.emails.send({
-    from: FROM,
-    to: resolveRecipient(agentEmail),
+  const result = await sendEmail({
+    name: "sendQuotationAcceptedEmail",
+    to: agentEmail,
     subject,
+    text,
     html: base(`
       <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${agentName} 👋</p>
-      <h2 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#0f2044;">Quotation accepted!</h2>
+      <h2 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#0f2044;">Quotation accepted</h2>
       ${badge("Accepted", "#16a34a")}
       <p style="margin:16px 0 20px;font-size:14px;color:#374151;line-height:1.6;">
         <strong>${clientName}</strong> has accepted your quotation for <strong>${productName}</strong>.
@@ -291,6 +362,18 @@ export async function sendOrderStatusUpdateEmail(
   const link   = `${BASE_URL}/client/orders/${orderId}`;
   const shortId = orderId.slice(-8).toUpperCase();
   const subject = `Order #${shortId} update: ${meta.label}`;
+  const text = baseText(`Hello, ${clientName}
+
+Your order has been updated.
+
+${meta.message}
+${trackingNumber ? `\nTracking number: ${trackingNumber}` : ""}
+
+Order ID: #${shortId}
+Product: ${productName}
+New status: ${meta.label}
+
+Track your order: ${link}`);
 
   const trackingBlock = (newStatus === "SHIPPED" || newStatus === "DELIVERED") && trackingNumber
     ? `<div style="margin:16px 0;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px 20px;">
@@ -300,11 +383,11 @@ export async function sendOrderStatusUpdateEmail(
     : "";
 
   try {
-    logEmailAttempt("sendOrderStatusUpdateEmail", clientEmail, subject);
-    const result = await resend.emails.send({
-      from: FROM,
-      to: resolveRecipient(clientEmail),
+    const result = await sendEmail({
+      name: "sendOrderStatusUpdateEmail",
+      to: clientEmail,
       subject,
+      text,
       html: base(`
         <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${clientName} 👋</p>
         <h2 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#0f2044;">Your order has been updated</h2>
@@ -339,17 +422,26 @@ export async function sendVerificationEmail(
     return;
   }
   const subject = "Verify your RUYA account";
+  const text = baseText(`Hello, ${name}
+
+Verify your email address.
+
+Thanks for joining RUYA. Please confirm your email address to activate your account and access the platform.
+
+Verify email: ${verificationLink}
+
+This link expires in 24 hours. If you did not create a RUYA account, you can safely ignore this email.`);
   try {
-    logEmailAttempt("sendVerificationEmail", email, subject);
-    const result = await resend.emails.send({
-      from: FROM,
-      to: resolveRecipient(email),
+    const result = await sendEmail({
+      name: "sendVerificationEmail",
+      to: email,
       subject,
+      text,
       html: base(`
         <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${name} 👋</p>
         <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#0f2044;">Verify your email address</h2>
         <p style="margin:0 0 24px;font-size:14px;color:#374151;line-height:1.7;">
-          Thanks for joining RUYA! Please confirm your email address to activate your account and access the platform.
+          Thanks for joining RUYA. Please confirm your email address to activate your account and access the platform.
         </p>
         ${btn("Verify Email →", verificationLink)}
         <p style="margin:28px 0 0;font-size:12px;color:#9ca3af;line-height:1.6;">
@@ -389,16 +481,27 @@ export async function sendOrderStatusAdminAlert(
   const link    = `${BASE_URL}/agent/orders/${orderId}`;
   const shortId = orderId.slice(-8).toUpperCase();
   const subject = `[Admin] Order #${shortId} → ${meta.label}`;
+  const text = baseText(`Internal alert
+
+Order status changed.
+
+Order ID: #${shortId}
+Product: ${productName}
+New status: ${meta.label}
+Client: ${clientName}
+Agent: ${agentName}
+
+View order: ${link}`);
 
   try {
-    logEmailAttempt("sendOrderStatusAdminAlert", adminEmail, subject);
-    const result = await resend.emails.send({
-      from: FROM,
-      to: resolveRecipient(adminEmail),
+    const result = await sendEmail({
+      name: "sendOrderStatusAdminAlert",
+      to: adminEmail,
       subject,
+      text,
       html: base(`
         <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Internal alert</p>
-        <h2 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#0f2044;">Order Status Changed</h2>
+        <h2 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#0f2044;">Order status changed</h2>
         ${badge(meta.label, meta.color)}
         <table cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;width:100%;margin-top:20px;">
           <tbody>
@@ -435,13 +538,25 @@ export async function sendRevisionRequestedEmail(
 
   const link = `${BASE_URL}/agent/requests/${requestId}`;
   const subject = `Revision requested: ${productName}`;
+  const text = baseText(`Hello, ${agentName}
+
+Revision requested.
+
+${clientName} has requested a revision on your quotation for ${productName}. Please review the feedback and submit an updated quotation.
+${revisionNote ? `\nClient feedback: ${revisionNote.replace(/\[Revision requested\]\s*/i, "")}` : ""}
+
+Product: ${productName}
+Client: ${clientName}
+Request ID: #${requestId.slice(-10).toUpperCase()}
+
+Submit revised quotation: ${link}`);
 
   try {
-  logEmailAttempt("sendRevisionRequestedEmail", agentEmail, subject);
-  const result = await resend.emails.send({
-    from: FROM,
-    to: resolveRecipient(agentEmail),
+  const result = await sendEmail({
+    name: "sendRevisionRequestedEmail",
+    to: agentEmail,
     subject,
+    text,
     html: base(`
       <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${agentName} 👋</p>
       <h2 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#0f2044;">Revision requested</h2>
@@ -483,12 +598,21 @@ export async function sendPaymentReceiptNotification(
   const link = `${BASE_URL}/admin/orders/${orderId}`;
   const shortId = orderId.slice(-8).toUpperCase();
   const subject = `Payment receipt submitted: Order #${shortId}`;
+  const text = baseText(`Payment receipt submitted.
+
+${clientName} has uploaded a payment receipt for their order of ${productName}. Please review the receipt and confirm or reject the payment.
+
+Client: ${clientName}
+Product: ${productName}
+Order ID: #${shortId}
+
+Review payment: ${link}`);
   try {
-    logEmailAttempt("sendPaymentReceiptNotification", adminEmail, subject);
-    await resend.emails.send({
-      from: FROM,
-      to: resolveRecipient(adminEmail),
+    await sendEmail({
+      name: "sendPaymentReceiptNotification",
+      to: adminEmail,
       subject,
+      text,
       html: base(`
         <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f2044;">Payment receipt submitted</h2>
         ${badge("Awaiting Review", "#d97706")}
@@ -524,12 +648,21 @@ export async function sendPaymentRejectedEmail(
   const link = `${BASE_URL}/client/orders/${orderId}`;
   const shortId = orderId.slice(-8).toUpperCase();
   const subject = `Action required: Payment receipt rejected — Order #${shortId}`;
+  const text = baseText(`Hello, ${clientName}
+
+Payment receipt rejected.
+
+Your payment receipt for ${productName} could not be verified. Please upload a new receipt.
+
+Reason: ${reason}
+
+Resubmit receipt: ${link}`);
   try {
-    logEmailAttempt("sendPaymentRejectedEmail", clientEmail, subject);
-    await resend.emails.send({
-      from: FROM,
-      to: resolveRecipient(clientEmail),
+    await sendEmail({
+      name: "sendPaymentRejectedEmail",
+      to: clientEmail,
       subject,
+      text,
       html: base(`
         <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${clientName} 👋</p>
         <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f2044;">Payment receipt rejected</h2>
@@ -562,15 +695,26 @@ export async function sendInvoiceEmail(
   const link = `${BASE_URL}/client/orders/${orderId}`;
   const shortId = orderId.slice(-8).toUpperCase();
   const subject = `Payment confirmed — Invoice for Order #${shortId}`;
+  const text = baseText(`Hello, ${clientName}
+
+Payment confirmed.
+
+Your payment for ${productName} has been confirmed. Your invoice is attached to this email. Your order will now move to production.
+
+Order ID: #${shortId}
+Product: ${productName}
+Next step: Order is now in production
+
+Track your order: ${link}`);
   try {
-    logEmailAttempt("sendInvoiceEmail", clientEmail, subject);
-    await resend.emails.send({
-      from: FROM,
-      to: resolveRecipient(clientEmail),
+    await sendEmail({
+      name: "sendInvoiceEmail",
+      to: clientEmail,
       subject,
+      text,
       html: base(`
         <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${clientName} 👋</p>
-        <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f2044;">Payment confirmed!</h2>
+        <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f2044;">Payment confirmed</h2>
         ${badge("Paid", "#16a34a")}
         <p style="margin:16px 0 20px;font-size:14px;color:#374151;line-height:1.6;">
           Your payment for <strong>${productName}</strong> has been confirmed. Your invoice is attached to this email.
@@ -606,12 +750,24 @@ export async function sendAgentWelcomeEmail(
 ) {
   if (!process.env.RESEND_API_KEY) return;
   const subject = "Welcome to RUYA — Your agent account is ready";
+  const text = baseText(`Hello, ${agentName}
+
+Welcome to RUYA.
+
+An agent account has been created for you on the RUYA Sourcing Platform. Use the credentials below to sign in and start managing sourcing requests.
+
+Email: ${agentEmail}
+Temporary password: ${tempPassword}
+
+Please change your password after your first login.
+
+Sign in: ${BASE_URL}/auth/login`);
   try {
-    logEmailAttempt("sendAgentWelcomeEmail", agentEmail, subject);
-    await resend.emails.send({
-      from: FROM,
-      to: resolveRecipient(agentEmail),
+    await sendEmail({
+      name: "sendAgentWelcomeEmail",
+      to: agentEmail,
       subject,
+      text,
       html: base(`
         <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${agentName} 👋</p>
         <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f2044;">Welcome to RUYA</h2>
@@ -647,12 +803,19 @@ export async function sendRoleChangedEmail(
   const portalPath = toRole === "AGENT" ? "/agent/dashboard" : "/client/dashboard";
   const roleBadgeColor = toRole === "AGENT" ? "#7c3aed" : "#059669";
   const subject = `Your RUYA account role has been updated to ${toRole}`;
+  const text = baseText(`Hello, ${name}
+
+Your role has been updated.
+
+An administrator has updated your role on the RUYA platform from ${fromRole} to ${toRole}. Your dashboard and available features have been updated accordingly.
+
+Go to your dashboard: ${BASE_URL}${portalPath}`);
   try {
-    logEmailAttempt("sendRoleChangedEmail", email, subject);
-    await resend.emails.send({
-      from: FROM,
-      to: resolveRecipient(email),
+    await sendEmail({
+      name: "sendRoleChangedEmail",
+      to: email,
       subject,
+      text,
       html: base(`
         <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${name} 👋</p>
         <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f2044;">Your role has been updated</h2>
@@ -685,17 +848,26 @@ export async function sendPasswordResetEmail(
     return;
   }
   const subject = "Reset your RUYA password";
+  const text = baseText(`Hello, ${name}
+
+Reset your password.
+
+We received a request to reset the password for your RUYA account. Use the link below to choose a new password.
+
+Reset password: ${resetLink}
+
+This link expires in 1 hour. If you did not request a password reset, you can safely ignore this email.`);
   try {
-    logEmailAttempt("sendPasswordResetEmail", email, subject);
-    const result = await resend.emails.send({
-      from: FROM,
-      to: resolveRecipient(email),
+    const result = await sendEmail({
+      name: "sendPasswordResetEmail",
+      to: email,
       subject,
+      text,
       html: base(`
         <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${name} 👋</p>
         <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#0f2044;">Reset your password</h2>
         <p style="margin:0 0 24px;font-size:14px;color:#374151;line-height:1.7;">
-          We received a request to reset the password for your RUYA account. Click the button below to choose a new password.
+          We received a request to reset the password for your RUYA account. Use the link below to choose a new password.
         </p>
         ${btn("Reset Password →", resetLink)}
         <p style="margin:28px 0 0;font-size:12px;color:#9ca3af;line-height:1.6;">
