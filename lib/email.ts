@@ -9,6 +9,17 @@ const BASE_URL = process.env.NEXTAUTH_URL ?? "https://ruya.services";
 const resolveRecipient = (actual: string) =>
   process.env.DEV_EMAIL_TO ?? actual;
 
+const logEmailAttempt = (name: string, actualTo: string, subject: string) => {
+  const resolvedTo = resolveRecipient(actualTo);
+  console.log(`[email] ${name} sending`, {
+    from: FROM,
+    to: resolvedTo,
+    intendedTo: actualTo,
+    recipientOverridden: resolvedTo !== actualTo,
+    subject,
+  });
+};
+
 // ─── Shared styles ───────────────────────────────────────────────────────────
 
 const base = (content: string) => `
@@ -131,12 +142,14 @@ export async function sendNewRequestEmail(
   }
 
   const link = `${BASE_URL}/agent/requests/${requestId}`;
+  const subject = `New request assigned: ${productName}`;
 
   try {
+  logEmailAttempt("sendNewRequestEmail", agentEmail, subject);
   const result = await resend.emails.send({
     from: FROM,
     to: resolveRecipient(agentEmail),
-    subject: `New request assigned: ${productName}`,
+    subject,
     html: base(`
       <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${agentName} 👋</p>
       <h2 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#0f2044;">You have a new request</h2>
@@ -185,6 +198,7 @@ export async function sendQuotationReceivedEmail(
     : `Great news! <strong>${agentName}</strong> has submitted a quotation for your sourcing request. Review the pricing, lead time, and supplier details, then accept, request a revision, or reject.`;
 
   try {
+  logEmailAttempt("sendQuotationReceivedEmail", clientEmail, subject);
   const result = await resend.emails.send({
     from: FROM,
     to: resolveRecipient(clientEmail),
@@ -225,12 +239,14 @@ export async function sendQuotationAcceptedEmail(
   }
 
   const link = `${BASE_URL}/agent/requests/${requestId}`;
+  const subject = `Quotation accepted: ${productName}`;
 
   try {
+  logEmailAttempt("sendQuotationAcceptedEmail", agentEmail, subject);
   const result = await resend.emails.send({
     from: FROM,
     to: resolveRecipient(agentEmail),
-    subject: `Quotation accepted: ${productName}`,
+    subject,
     html: base(`
       <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${agentName} 👋</p>
       <h2 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#0f2044;">Quotation accepted!</h2>
@@ -274,6 +290,7 @@ export async function sendOrderStatusUpdateEmail(
   const meta   = STATUS_META[newStatus] ?? { label: newStatus.replace(/_/g, " "), color: "#0f2044", message: "Your order status has been updated." };
   const link   = `${BASE_URL}/client/orders/${orderId}`;
   const shortId = orderId.slice(-8).toUpperCase();
+  const subject = `Order #${shortId} update: ${meta.label}`;
 
   const trackingBlock = (newStatus === "SHIPPED" || newStatus === "DELIVERED") && trackingNumber
     ? `<div style="margin:16px 0;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px 20px;">
@@ -283,10 +300,11 @@ export async function sendOrderStatusUpdateEmail(
     : "";
 
   try {
+    logEmailAttempt("sendOrderStatusUpdateEmail", clientEmail, subject);
     const result = await resend.emails.send({
       from: FROM,
       to: resolveRecipient(clientEmail),
-      subject: `Order #${shortId} update: ${meta.label}`,
+      subject,
       html: base(`
         <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${clientName} 👋</p>
         <h2 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#0f2044;">Your order has been updated</h2>
@@ -320,11 +338,13 @@ export async function sendVerificationEmail(
     console.warn("[email] RESEND_API_KEY is missing — skipping email");
     return;
   }
+  const subject = "Verify your RUYA account";
   try {
+    logEmailAttempt("sendVerificationEmail", email, subject);
     const result = await resend.emails.send({
       from: FROM,
       to: resolveRecipient(email),
-      subject: "Verify your RUYA account",
+      subject,
       html: base(`
         <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${name} 👋</p>
         <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#0f2044;">Verify your email address</h2>
@@ -368,12 +388,14 @@ export async function sendOrderStatusAdminAlert(
   const meta    = STATUS_META[newStatus] ?? { label: newStatus.replace(/_/g, " "), color: "#0f2044" };
   const link    = `${BASE_URL}/agent/orders/${orderId}`;
   const shortId = orderId.slice(-8).toUpperCase();
+  const subject = `[Admin] Order #${shortId} → ${meta.label}`;
 
   try {
+    logEmailAttempt("sendOrderStatusAdminAlert", adminEmail, subject);
     const result = await resend.emails.send({
       from: FROM,
       to: resolveRecipient(adminEmail),
-      subject: `[Admin] Order #${shortId} → ${meta.label}`,
+      subject,
       html: base(`
         <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Internal alert</p>
         <h2 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#0f2044;">Order Status Changed</h2>
@@ -412,12 +434,14 @@ export async function sendRevisionRequestedEmail(
   }
 
   const link = `${BASE_URL}/agent/requests/${requestId}`;
+  const subject = `Revision requested: ${productName}`;
 
   try {
+  logEmailAttempt("sendRevisionRequestedEmail", agentEmail, subject);
   const result = await resend.emails.send({
     from: FROM,
     to: resolveRecipient(agentEmail),
-    subject: `Revision requested: ${productName}`,
+    subject,
     html: base(`
       <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${agentName} 👋</p>
       <h2 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#0f2044;">Revision requested</h2>
@@ -458,11 +482,13 @@ export async function sendPaymentReceiptNotification(
   if (!process.env.RESEND_API_KEY) return;
   const link = `${BASE_URL}/admin/orders/${orderId}`;
   const shortId = orderId.slice(-8).toUpperCase();
+  const subject = `Payment receipt submitted: Order #${shortId}`;
   try {
+    logEmailAttempt("sendPaymentReceiptNotification", adminEmail, subject);
     await resend.emails.send({
       from: FROM,
       to: resolveRecipient(adminEmail),
-      subject: `Payment receipt submitted: Order #${shortId}`,
+      subject,
       html: base(`
         <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f2044;">Payment receipt submitted</h2>
         ${badge("Awaiting Review", "#d97706")}
@@ -497,11 +523,13 @@ export async function sendPaymentRejectedEmail(
   if (!process.env.RESEND_API_KEY) return;
   const link = `${BASE_URL}/client/orders/${orderId}`;
   const shortId = orderId.slice(-8).toUpperCase();
+  const subject = `Action required: Payment receipt rejected — Order #${shortId}`;
   try {
+    logEmailAttempt("sendPaymentRejectedEmail", clientEmail, subject);
     await resend.emails.send({
       from: FROM,
       to: resolveRecipient(clientEmail),
-      subject: `Action required: Payment receipt rejected — Order #${shortId}`,
+      subject,
       html: base(`
         <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${clientName} 👋</p>
         <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f2044;">Payment receipt rejected</h2>
@@ -533,11 +561,13 @@ export async function sendInvoiceEmail(
   if (!process.env.RESEND_API_KEY) return;
   const link = `${BASE_URL}/client/orders/${orderId}`;
   const shortId = orderId.slice(-8).toUpperCase();
+  const subject = `Payment confirmed — Invoice for Order #${shortId}`;
   try {
+    logEmailAttempt("sendInvoiceEmail", clientEmail, subject);
     await resend.emails.send({
       from: FROM,
       to: resolveRecipient(clientEmail),
-      subject: `Payment confirmed — Invoice for Order #${shortId}`,
+      subject,
       html: base(`
         <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${clientName} 👋</p>
         <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f2044;">Payment confirmed!</h2>
@@ -575,11 +605,13 @@ export async function sendAgentWelcomeEmail(
   tempPassword: string
 ) {
   if (!process.env.RESEND_API_KEY) return;
+  const subject = "Welcome to RUYA — Your agent account is ready";
   try {
+    logEmailAttempt("sendAgentWelcomeEmail", agentEmail, subject);
     await resend.emails.send({
       from: FROM,
       to: resolveRecipient(agentEmail),
-      subject: "Welcome to RUYA — Your agent account is ready",
+      subject,
       html: base(`
         <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${agentName} 👋</p>
         <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f2044;">Welcome to RUYA</h2>
@@ -614,11 +646,13 @@ export async function sendRoleChangedEmail(
 ) {
   const portalPath = toRole === "AGENT" ? "/agent/dashboard" : "/client/dashboard";
   const roleBadgeColor = toRole === "AGENT" ? "#7c3aed" : "#059669";
+  const subject = `Your RUYA account role has been updated to ${toRole}`;
   try {
+    logEmailAttempt("sendRoleChangedEmail", email, subject);
     await resend.emails.send({
       from: FROM,
       to: resolveRecipient(email),
-      subject: `Your RUYA account role has been updated to ${toRole}`,
+      subject,
       html: base(`
         <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${name} 👋</p>
         <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f2044;">Your role has been updated</h2>
@@ -650,11 +684,13 @@ export async function sendPasswordResetEmail(
     console.warn("[email] RESEND_API_KEY is missing — skipping email");
     return;
   }
+  const subject = "Reset your RUYA password";
   try {
+    logEmailAttempt("sendPasswordResetEmail", email, subject);
     const result = await resend.emails.send({
       from: FROM,
       to: resolveRecipient(email),
-      subject: "Reset your RUYA password",
+      subject,
       html: base(`
         <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${name} 👋</p>
         <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#0f2044;">Reset your password</h2>
