@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Building2, Copy, CheckCircle2, MessageCircle } from "lucide-react";
 
-const WHATSAPP_NUMBER = "+212600000000"; // TODO: Replace with actual WhatsApp number
+const WHATSAPP_NUMBER = "+8618124804645";
 
 const ACCOUNTS = [
   {
