@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, RotateCcw, XCircle, Loader2, X } from "lucide-react";
+import { CheckCircle2, RotateCcw, XCircle, Loader2, X, ArrowRight } from "lucide-react";
+import PaymentBankInfo from "@/components/PaymentBankInfo";
 
 export default function QuotationActions({ quotationId, status }: { quotationId: string; status: string }) {
   const router = useRouter();
   const [loading, setLoading] = useState<"ACCEPT" | "REQUEST_REVISION" | "REJECT" | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [acceptedOrderId, setAcceptedOrderId] = useState<string | null>(null);
   const [revisionNotes, setRevisionNotes] = useState("");
   const [error, setError] = useState("");
 
@@ -25,7 +28,8 @@ export default function QuotationActions({ quotationId, status }: { quotationId:
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Action failed");
       if (action === "ACCEPT" && data.orderId) {
-        router.push(`/client/orders/${data.orderId}`);
+        setAcceptedOrderId(data.orderId);
+        setShowPaymentModal(true);
         return;
       }
       setShowModal(false);
@@ -90,6 +94,44 @@ export default function QuotationActions({ quotationId, status }: { quotationId:
           Reject
         </button>
       </div>
+
+      {/* Payment info modal — shown after accepting quotation */}
+      {showPaymentModal && acceptedOrderId && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+        >
+          <div className="w-full max-w-lg mx-4 bg-background rounded-xl shadow-2xl border border-border overflow-hidden max-h-[90vh] flex flex-col">
+            {/* Modal header */}
+            <div className="px-6 py-4 border-b border-border shrink-0">
+              <div className="flex items-center gap-3 mb-1">
+                <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                </div>
+                <h3 className="text-base font-semibold">Quotation Accepted</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Please transfer the payment to one of the accounts below, then upload your receipt on the order page.
+              </p>
+            </div>
+
+            {/* Modal body — scrollable */}
+            <div className="px-6 py-5 overflow-y-auto">
+              <PaymentBankInfo />
+            </div>
+
+            {/* Modal footer */}
+            <div className="px-6 py-4 border-t border-border bg-muted/30 shrink-0">
+              <button
+                onClick={() => router.push(`/client/orders/${acceptedOrderId}`)}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-all"
+              >
+                Go to Order Page
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Revision modal */}
       {showModal && (

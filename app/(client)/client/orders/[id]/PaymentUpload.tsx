@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { Upload, FileText, X, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import PaymentBankInfo from "@/components/PaymentBankInfo";
 
 interface Props {
   orderId: string;
@@ -85,19 +86,22 @@ export default function PaymentUpload({
         </div>
       )}
 
-      {/* Instructions */}
-      <div className="rounded-lg bg-amber-50 border border-amber-200 p-4">
-        <p className="text-sm font-semibold text-amber-800 mb-1">Payment Instructions</p>
-        <p className="text-sm text-amber-700 leading-relaxed">
-          Please transfer the total amount to our bank account and upload your payment receipt below.
-          Once verified, your order will proceed to production.
-        </p>
-      </div>
-
       {/* Amount due */}
       <div className="flex items-center justify-between rounded-lg border bg-muted/30 px-4 py-3">
         <span className="text-sm text-muted-foreground font-medium">Amount due</span>
         <span className="text-xl font-bold text-primary">{formatCurrency(totalAmount)}</span>
+      </div>
+
+      {/* Bank account details */}
+      <PaymentBankInfo />
+
+      {/* Instructions */}
+      <div className="rounded-lg bg-amber-50 border border-amber-200 p-4">
+        <p className="text-sm font-semibold text-amber-800 mb-1">Upload your receipt</p>
+        <p className="text-sm text-amber-700 leading-relaxed">
+          After completing your transfer, upload the payment receipt below.
+          Once verified, your order will proceed to production.
+        </p>
       </div>
 
       {/* Drop zone */}
