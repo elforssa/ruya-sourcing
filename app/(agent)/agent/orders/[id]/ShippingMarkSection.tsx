@@ -8,6 +8,7 @@ import {
 
 interface Props {
   orderId: string;
+  readOnly?: boolean;
   initial: {
     ref: string | null;
     cartons: number | null;
@@ -19,7 +20,7 @@ interface Props {
   };
 }
 
-export default function ShippingMarkSection({ orderId, initial }: Props) {
+export default function ShippingMarkSection({ orderId, initial, readOnly = false }: Props) {
   const router = useRouter();
 
   const [cartons,     setCartons]     = useState(initial.cartons     ? String(initial.cartons) : "");
@@ -83,6 +84,53 @@ export default function ShippingMarkSection({ orderId, initial }: Props) {
         </div>
       )}
 
+      {/* Read-only summary */}
+      {readOnly ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Cartons</p>
+              <p className="font-semibold text-sm">{initial.cartons ?? "—"}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Net Weight</p>
+              <p className="font-semibold text-sm">{initial.netWeight ?? "—"}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Gross Weight</p>
+              <p className="font-semibold text-sm">{initial.grossWeight ?? "—"}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Dimensions</p>
+              <p className="font-semibold text-sm">{initial.dimensions ?? "—"}</p>
+            </div>
+          </div>
+          {initial.notes && (
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Notes</p>
+              <p className="text-sm text-foreground">{initial.notes}</p>
+            </div>
+          )}
+          <div className="flex flex-wrap gap-3">
+            {savedRef && (
+              <a
+                href={`/api/orders/${orderId}/shipping-mark-pdf`}
+                download={`ShippingMark-${savedRef}.pdf`}
+                className="inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/5 px-5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10 transition-all"
+              >
+                <Download className="h-4 w-4" /> Download PDF
+              </a>
+            )}
+            {sentAt && (
+              <div className="inline-flex items-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700">
+                <CheckCircle2 className="h-4 w-4" />
+                Sent on {new Date(sentAt).toLocaleDateString()}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <>
       {/* Form grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -197,6 +245,8 @@ export default function ShippingMarkSection({ orderId, initial }: Props) {
           </div>
         )}
       </div>
+        </>
+      )}
     </div>
   );
 }

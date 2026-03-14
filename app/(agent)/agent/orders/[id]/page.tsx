@@ -213,20 +213,46 @@ export default async function AgentOrderDetailPage({
         </CardContent>
       </Card>
 
-      {/* ── Shipping Mark (shown from IN_PRODUCTION onwards) ── */}
-      {["IN_PRODUCTION", "SHIPPED", "DELIVERED"].includes(order.status) && (
+      {/* ── Packing & Shipping Mark (editable at IN_PRODUCTION, read-only after) ── */}
+      {order.status === "IN_PRODUCTION" && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Cog className="h-4 w-4 text-primary" /> Shipping Mark
+              <Cog className="h-4 w-4 text-primary" /> Packing & Shipping Mark
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Prepare and send the shipping mark document to the factory.
+              Prepare carton details, packing notes, and send the shipping mark to the factory before shipment.
             </p>
           </CardHeader>
           <CardContent>
             <ShippingMarkSection
               orderId={order.id}
+              initial={{
+                ref:         order.shippingMarkRef,
+                cartons:     order.shippingMarkCartons,
+                netWeight:   order.shippingMarkNetWeight,
+                grossWeight: order.shippingMarkGrossWeight,
+                dimensions:  order.shippingMarkDimensions,
+                notes:       order.shippingMarkNotes,
+                sentAt:      order.shippingMarkSentAt,
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Shipping Mark (read-only summary after production) ── */}
+      {["SHIPPED", "DELIVERED"].includes(order.status) && order.shippingMarkRef && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Package className="h-4 w-4 text-primary" /> Shipping Mark
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ShippingMarkSection
+              orderId={order.id}
+              readOnly
               initial={{
                 ref:         order.shippingMarkRef,
                 cartons:     order.shippingMarkCartons,
@@ -248,7 +274,13 @@ export default async function AgentOrderDetailPage({
             <Truck className="h-4 w-4 text-primary" /> Update Order
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Change the status and add shipping details when the order ships.
+            {order.status === "DELIVERED"
+              ? "This order is complete."
+              : order.status === "SHIPPED"
+                ? "Update shipping details or mark as delivered."
+                : order.status === "IN_PRODUCTION"
+                  ? "Fill in packing details above, then mark as shipped when ready."
+                  : "Advance the order to the next stage."}
           </p>
         </CardHeader>
         <CardContent>

@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { sendOrderStatusUpdateEmail, sendOrderStatusAdminAlert } from "@/lib/email";
 import { createNotification } from "@/lib/notifications";
 
-const VALID_STATUSES = [
+const STATUS_ORDER = [
   "CONFIRMED",
   "PAYMENT_PENDING",
   "PAID",
@@ -13,6 +13,14 @@ const VALID_STATUSES = [
   "SHIPPED",
   "DELIVERED",
 ];
+
+const ALLOWED_TRANSITIONS: Record<string, string> = {
+  CONFIRMED:       "PAYMENT_PENDING",
+  PAYMENT_PENDING: "PAID",
+  PAID:            "IN_PRODUCTION",
+  IN_PRODUCTION:   "SHIPPED",
+  SHIPPED:         "DELIVERED",
+};
 
 export async function PUT(
   req: NextRequest,
@@ -43,8 +51,24 @@ export async function PUT(
   const body = await req.json();
   const { status, carrier, trackingNumber, estimatedDelivery, shippingMark } = body;
 
-  if (!VALID_STATUSES.includes(status)) {
+  if (!STATUS_ORDER.includes(status)) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  }
+
+  const currentStatus = order.status;
+  const allowedNext = ALLOWED_TRANSITIONS[currentStatus];
+  if (status !== currentStatus && status !== allowedNext) {
+    return NextResponse.json(
+      { error: `Cannot transition from ${currentStatus.replace(/_/g, " ")} to ${status.replace(/_/g, " ")}. Next allowed status: ${allowedNext?.replace(/_/g, " ") ?? "none"}.` },
+      { status: 400 }
+    );
+  }
+
+  if (status === "SHIPPED" && (!carrier?.trim() || !trackingNumber?.trim())) {
+    return NextResponse.json(
+      { error: "Carrier and tracking number are required to mark as shipped." },
+      { status: 400 }
+    );
   }
 
   const updated = await prisma.order.update({
