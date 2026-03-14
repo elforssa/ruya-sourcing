@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createNotification } from "@/lib/notifications";
+import { sendNewRequestEmail } from "@/lib/email";
 
 export async function PATCH(
   req: NextRequest,
@@ -22,11 +23,20 @@ export async function PATCH(
 
   const request = await prisma.sourcingRequest.update({
     where: { id: params.id },
+    include: { client: { select: { name: true } } },
     data: {
       assignedAgentId: agentId,
       status: "ASSIGNED",
     },
   });
+
+  await sendNewRequestEmail(
+    agent.email,
+    agent.name ?? "Agent",
+    request.productName,
+    request.id,
+    request.client.name ?? "Client"
+  );
 
   await createNotification(
     agentId,

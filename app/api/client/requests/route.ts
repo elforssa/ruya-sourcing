@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendNewRequestAvailableEmail } from "@/lib/email";
+import { createNotification } from "@/lib/notifications";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -49,6 +51,33 @@ export async function POST(req: NextRequest) {
       clientId: session.user.id,
     },
   });
+
+  // Notify all active agents + admins
+  const clientName = session.user.name ?? "Client";
+  const recipients = await prisma.user.findMany({
+    where: { role: { in: ["AGENT", "ADMIN"] }, isActive: true },
+    select: { id: true, email: true, name: true },
+  });
+
+  await Promise.all(
+    recipients.map(async (r) => {
+      await createNotification(
+        r.id,
+        "New sourcing request",
+        `${clientName} submitted a new request for "${productName.trim()}".`,
+        "NEW_REQUEST",
+        `/agent/requests/${request.id}`
+      );
+      await sendNewRequestAvailableEmail(
+        r.email,
+        r.name ?? "Team",
+        productName.trim(),
+        request.id,
+        clientName,
+        parseInt(quantity)
+      );
+    })
+  );
 
   return NextResponse.json({ id: request.id }, { status: 201 });
 }

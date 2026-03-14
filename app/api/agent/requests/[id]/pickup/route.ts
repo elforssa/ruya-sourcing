@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createNotification } from "@/lib/notifications";
+import { sendNewRequestEmail } from "@/lib/email";
 
 export async function POST(
   req: NextRequest,
@@ -25,13 +26,22 @@ export async function POST(
     return NextResponse.json({ error: "Request already assigned" }, { status: 409 });
   }
 
-  await prisma.sourcingRequest.update({
+  const updated = await prisma.sourcingRequest.update({
     where: { id: params.id },
+    include: { client: { select: { name: true } } },
     data: {
       assignedAgentId: session.user.id,
       status: "ASSIGNED",
     },
   });
+
+  await sendNewRequestEmail(
+    session.user.email!,
+    session.user.name ?? "Agent",
+    updated.productName,
+    updated.id,
+    updated.client.name ?? "Client"
+  );
 
   await createNotification(
     session.user.id,

@@ -161,6 +161,66 @@ const STATUS_META: Record<string, { label: string; color: string; message: strin
   DELIVERED:       { label: "Delivered",       color: "#16a34a", message: "Your order has been delivered. Thank you for choosing RUYA!" },
 };
 
+// ─── 0. Client submits a request → notify agents + admin ────────────────────
+
+export async function sendNewRequestAvailableEmail(
+  recipientEmail: string,
+  recipientName: string,
+  productName: string,
+  requestId: string,
+  clientName: string,
+  quantity: number
+) {
+  console.log("[email] RESEND_API_KEY exists:", !!process.env.RESEND_API_KEY);
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY is missing — skipping email");
+    return;
+  }
+
+  const link = `${BASE_URL}/agent/requests/${requestId}`;
+  const subject = `New sourcing request: ${productName}`;
+  const text = baseText(`Hello, ${recipientName}
+
+A new sourcing request has been submitted.
+
+${clientName} submitted a new sourcing request. Review the details and pick it up if available.
+
+Product: ${productName}
+Client: ${clientName}
+Quantity: ${quantity.toLocaleString()} units
+Request ID: #${requestId.slice(-10).toUpperCase()}
+
+View request: ${link}`);
+
+  try {
+    await sendEmail({
+      name: "sendNewRequestAvailableEmail",
+      to: recipientEmail,
+      subject,
+      text,
+      html: base(`
+        <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Hello, ${recipientName} 👋</p>
+        <h2 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#0f2044;">New sourcing request available</h2>
+        ${badge("New Request", "#c9a84c")}
+        <p style="margin:16px 0 20px;font-size:14px;color:#374151;line-height:1.6;">
+          <strong>${clientName}</strong> submitted a new sourcing request. Review the details and pick it up if available.
+        </p>
+        <table cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;width:100%;margin-bottom:8px;">
+          <tbody>
+            ${infoRow("Product", productName)}
+            ${infoRow("Client", clientName)}
+            ${infoRow("Quantity", `${quantity.toLocaleString()} units`)}
+            ${infoRow("Request ID", `#${requestId.slice(-10).toUpperCase()}`)}
+          </tbody>
+        </table>
+        ${btn("View Request →", link)}
+      `),
+    });
+  } catch (error) {
+    console.error("[email] sendNewRequestAvailableEmail error:", error);
+  }
+}
+
 // ─── 1. Agent picks up a request ─────────────────────────────────────────────
 
 export async function sendNewRequestEmail(
