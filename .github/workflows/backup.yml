@@ -1,0 +1,44 @@
+name: Daily Database Backup
+
+on:
+  schedule:
+    # Runs every day at 2:00 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    # Allow manual trigger from GitHub Actions tab
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Create database backup
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+          BACKUP_FILE="ruya_${TIMESTAMP}.sql"
+          
+          # Strip channel_binding param for pg_dump compatibility
+          CLEAN_URL=$(echo "$DATABASE_URL" | sed 's/[?&]channel_binding=[^&]*//' | sed 's/[?&]sslmode=[^&]*//')
+          
+          pg_dump "$CLEAN_URL?sslmode=require" --no-owner --no-acl --clean --if-exists > "$BACKUP_FILE"
+          
+          if [ -s "$BACKUP_FILE" ]; then
+            SIZE=$(du -h "$BACKUP_FILE" | cut -f1)
+            echo "✅ Backup created: $BACKUP_FILE ($SIZE)"
+          else
+            echo "❌ Backup failed"
+            exit 1
+          fi
+          
+          echo "BACKUP_FILE=$BACKUP_FILE" >> $GITHUB_ENV
+
+      - name: Upload backup as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_id }}
+          path: ${{ env.BACKUP_FILE }}
+          retention-days: 30
