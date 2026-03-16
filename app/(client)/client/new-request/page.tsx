@@ -26,6 +26,7 @@ type FormData = {
   quantity: string;
   targetPrice: string;
   destinationCountry: string;
+  phoneNumber: string;
   serviceType: "FULL_SOURCING" | "PRICE_CHECK" | "INSPECTION" | "";
   notes: string;
 };
@@ -74,6 +75,7 @@ export default function NewRequestPage() {
     quantity: "",
     targetPrice: "",
     destinationCountry: "",
+    phoneNumber: "",
     serviceType: "",
     notes: "",
   });
@@ -98,6 +100,10 @@ export default function NewRequestPage() {
       e.quantity = "Enter a valid quantity (min 1).";
     if (formData.targetPrice && isNaN(parseFloat(formData.targetPrice)))
       e.targetPrice = "Enter a valid price.";
+    if (!formData.phoneNumber.trim())
+      e.phoneNumber = "Phone number is required.";
+    else if (formData.phoneNumber.trim().length < 10)
+      e.phoneNumber = "Enter a valid phone number (min 10 characters).";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -338,6 +344,23 @@ export default function NewRequestPage() {
                   className="w-full rounded-lg border border-input px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1.5">
+                WhatsApp / Phone Number <span className="text-destructive">*</span>
+              </label>
+              <input
+                type="tel"
+                value={formData.phoneNumber}
+                onChange={(e) => { update("phoneNumber", e.target.value); clearError("phoneNumber"); }}
+                placeholder="+1 234 567 8900"
+                className={`w-full rounded-lg border px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all ${errors.phoneNumber ? "border-destructive" : "border-input"}`}
+              />
+              {errors.phoneNumber && <p className="text-xs text-destructive mt-1">{errors.phoneNumber}</p>}
+              <p className="text-xs text-muted-foreground mt-1.5">
+                Used for request updates, urgent clarifications, and shipping/payment support.
+              </p>
             </div>
           </div>
         )}

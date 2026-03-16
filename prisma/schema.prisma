@@ -19,6 +19,7 @@ model User {
   resetTokenExpiry        DateTime?
   image          String?
   password       String?
+  phoneNumber    String?
   role           String    @default("CLIENT")
   isActive       Boolean   @default(true)
   bannedAt       DateTime?

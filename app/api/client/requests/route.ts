@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
     quantity,
     targetPrice,
     destinationCountry,
+    phoneNumber,
     serviceType,
     referenceImages,
     notes,
@@ -33,6 +34,18 @@ export async function POST(req: NextRequest) {
   if (!serviceType) {
     return NextResponse.json({ error: "Service type is required" }, { status: 400 });
   }
+  if (!phoneNumber?.trim()) {
+    return NextResponse.json({ error: "Phone number is required" }, { status: 400 });
+  }
+  if (phoneNumber.trim().length < 10) {
+    return NextResponse.json({ error: "Phone number must be at least 10 characters" }, { status: 400 });
+  }
+
+  // Update user's phone number if provided
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { phoneNumber: phoneNumber.trim() },
+  });
 
   const request = await prisma.sourcingRequest.create({
     data: {
