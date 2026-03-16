@@ -9,43 +9,42 @@ datasource db {
 }
 
 model User {
-  id             String    @id @default(cuid())
-  name           String?
-  email          String    @unique
+  id                      String            @id @default(cuid())
+  name                    String?
+  email                   String            @unique
   emailVerified           DateTime?
-  verificationToken       String?   @unique
+  image                   String?
+  password                String?
+  phoneNumber             String?
+  role                    String            @default("CLIENT")
+  isActive                Boolean           @default(true)
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+  verificationToken       String?           @unique
   verificationTokenExpiry DateTime?
-  resetToken              String?   @unique
+  resetToken              String?           @unique
   resetTokenExpiry        DateTime?
-  image          String?
-  password       String?
-  phoneNumber    String?
-  role           String    @default("CLIENT")
-  isActive       Boolean   @default(true)
-  bannedAt       DateTime?
-  bannedReason   String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-
-  accounts        Account[]
-  sessions        Session[]
-  sourcingRequests SourcingRequest[] @relation("ClientRequests")
-  assignedRequests SourcingRequest[] @relation("AgentRequests")
-  quotations      Quotation[]
-  orders          Order[]
-  notifications   Notification[]
+  bannedAt                DateTime?
+  bannedReason            String?
+  accounts                Account[]
+  notifications           Notification[]
+  orders                  Order[]
+  quotations              Quotation[]
+  sessions                Session[]
+  assignedRequests        SourcingRequest[] @relation("AgentRequests")
+  sourcingRequests        SourcingRequest[] @relation("ClientRequests")
 }
 
 model Notification {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title     String
   message   String
   type      String
   isRead    Boolean  @default(false)
   link      String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Account {
@@ -61,8 +60,7 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -72,8 +70,7 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
@@ -85,52 +82,45 @@ model VerificationToken {
 }
 
 model SourcingRequest {
-  id                 String    @id @default(cuid())
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-
+  id                 String      @id @default(cuid())
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
   clientId           String
-  client             User      @relation("ClientRequests", fields: [clientId], references: [id])
-
   productName        String
   description        String?
   quantity           Int
   targetPrice        Float?
   destinationCountry String?
-  serviceType        String    @default("FULL_SOURCING")
+  serviceType        String      @default("FULL_SOURCING")
   referenceImages    String?
-  status             String    @default("DRAFT")
+  status             String      @default("DRAFT")
   notes              String?
-
   assignedAgentId    String?
-  agent              User?     @relation("AgentRequests", fields: [assignedAgentId], references: [id])
-
-  quotations         Quotation[]
   orders             Order[]
+  quotations         Quotation[]
+  agent              User?       @relation("AgentRequests", fields: [assignedAgentId], references: [id])
+  client             User        @relation("ClientRequests", fields: [clientId], references: [id])
 }
 
 model Quotation {
   id                   String          @id @default(cuid())
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
-
   requestId            String
-  request              SourcingRequest @relation(fields: [requestId], references: [id])
   agentId              String
-  agent                User            @relation(fields: [agentId], references: [id])
-
   unitPrice            Float
   totalPrice           Float
   supplierLocation     String?
   estimatedLeadTime    Int?
   shippingCostEstimate Float?
-  serviceFee           Float?
   notes                String?
-  revisionNote         String?
   status               String          @default("PENDING")
   version              Int             @default(1)
-
+  revisionNote         String?
+  serviceFee           Float?
   orders               Order[]
+  agent                User            @relation(fields: [agentId], references: [id])
+  request              SourcingRequest @relation(fields: [requestId], references: [id])
 }
 
 model RoleChangeLog {
@@ -146,32 +136,30 @@ model RoleChangeLog {
 }
 
 model Order {
-  id             String          @id @default(cuid())
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-
-  requestId      String
-  request        SourcingRequest @relation(fields: [requestId], references: [id])
-  quotationId    String
-  quotation      Quotation       @relation(fields: [quotationId], references: [id])
-  clientId       String
-  client         User            @relation(fields: [clientId], references: [id])
-
-  status                String    @default("CONFIRMED")
-  shippingMark          String?
-  trackingNumber        String?
-  carrier               String?
-  estimatedDelivery     DateTime?
-  paymentReceiptUrl     String?
-  paymentSubmittedAt    DateTime?
-  paymentConfirmedAt    DateTime?
-  paymentRejectedReason String?
-  invoiceUrl            String?
-  shippingMarkRef          String?
-  shippingMarkCartons      Int?
-  shippingMarkNetWeight    String?
-  shippingMarkGrossWeight  String?
-  shippingMarkDimensions   String?
-  shippingMarkNotes        String?
-  shippingMarkSentAt       DateTime?
+  id                      String          @id @default(cuid())
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+  requestId               String
+  quotationId             String
+  clientId                String
+  status                  String          @default("CONFIRMED")
+  shippingMark            String?
+  trackingNumber          String?
+  carrier                 String?
+  estimatedDelivery       DateTime?
+  invoiceUrl              String?
+  paymentConfirmedAt      DateTime?
+  paymentReceiptUrl       String?
+  paymentRejectedReason   String?
+  paymentSubmittedAt      DateTime?
+  shippingMarkCartons     Int?
+  shippingMarkDimensions  String?
+  shippingMarkGrossWeight String?
+  shippingMarkNetWeight   String?
+  shippingMarkNotes       String?
+  shippingMarkRef         String?
+  shippingMarkSentAt      DateTime?
+  client                  User            @relation(fields: [clientId], references: [id])
+  quotation               Quotation       @relation(fields: [quotationId], references: [id])
+  request                 SourcingRequest @relation(fields: [requestId], references: [id])
 }
