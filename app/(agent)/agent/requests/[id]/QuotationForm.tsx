@@ -12,6 +12,7 @@ type Props = {
     unitPrice: number;
     estimatedLeadTime: number | null;
     shippingCostEstimate: number | null;
+    serviceFee: number | null;
     notes: string | null;
   } | null;
   isRevision: boolean;
@@ -27,6 +28,7 @@ export default function QuotationForm({ requestId, quantity, prefill, isRevision
   const [totalPrice, setTotalPrice] = useState("");
   const [estimatedLeadTime, setEstimatedLeadTime] = useState(prefill?.estimatedLeadTime?.toString() ?? "");
   const [shippingCostEstimate, setShippingCostEstimate] = useState(prefill?.shippingCostEstimate?.toString() ?? "");
+  const [serviceFee, setServiceFee] = useState(prefill?.serviceFee?.toString() ?? "");
   const [notes, setNotes] = useState(prefill?.notes ?? "");
 
   useEffect(() => {
@@ -56,6 +58,7 @@ export default function QuotationForm({ requestId, quantity, prefill, isRevision
           totalPrice,
           estimatedLeadTime,
           shippingCostEstimate,
+          serviceFee,
           notes,
         }),
       });
@@ -92,7 +95,7 @@ export default function QuotationForm({ requestId, quantity, prefill, isRevision
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
           Pricing
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wider">
               Unit Price (USD) <span className="text-destructive">*</span>
@@ -144,6 +147,23 @@ export default function QuotationForm({ requestId, quantity, prefill, isRevision
               />
             </div>
           </div>
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wider">
+              Service Fee (USD)
+            </label>
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={serviceFee}
+                onChange={(e) => setServiceFee(e.target.value)}
+                placeholder="0.00"
+                className={`${field} pl-8`}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Live total summary */}
@@ -154,9 +174,23 @@ export default function QuotationForm({ requestId, quantity, prefill, isRevision
               <>
                 <span className="text-muted-foreground">+</span>
                 <span className="text-muted-foreground">Shipping: <span className="font-semibold text-foreground">${parseFloat(shippingCostEstimate).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></span>
+              </>
+            )}
+            {serviceFee && !isNaN(parseFloat(serviceFee)) && (
+              <>
                 <span className="text-muted-foreground">+</span>
+                <span className="text-muted-foreground">Service Fee: <span className="font-semibold text-foreground">${parseFloat(serviceFee).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></span>
+              </>
+            )}
+            {(shippingCostEstimate || serviceFee) && (
+              <>
+                <span className="text-muted-foreground">=</span>
                 <span className="text-muted-foreground font-semibold">
-                  Total: <span className="text-foreground text-base">${(parseFloat(totalPrice) + parseFloat(shippingCostEstimate)).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                  Total: <span className="text-foreground text-base">${(
+                    parseFloat(totalPrice) + 
+                    (shippingCostEstimate ? parseFloat(shippingCostEstimate) : 0) + 
+                    (serviceFee ? parseFloat(serviceFee) : 0)
+                  ).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
                 </span>
               </>
             )}

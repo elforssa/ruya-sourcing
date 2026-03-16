@@ -259,6 +259,7 @@ export default async function AgentRequestDetailPage({
                     unitPrice: latestQuotation?.unitPrice ?? 0,
                     estimatedLeadTime: latestQuotation?.estimatedLeadTime ?? null,
                     shippingCostEstimate: latestQuotation?.shippingCostEstimate ?? null,
+                    serviceFee: latestQuotation?.serviceFee ?? null,
                     notes: null,
                   } : null}
                   isRevision={isRevision}

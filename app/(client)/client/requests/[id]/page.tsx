@@ -285,10 +285,16 @@ export default async function RequestDetailPage({
                     <p className="text-lg font-bold">{formatCurrency(quotation.shippingCostEstimate)}</p>
                   </div>
                 )}
+                {quotation.serviceFee != null && quotation.serviceFee > 0 && (
+                  <div className="rounded-lg bg-background border border-border px-4 py-3 text-sm">
+                    <p className="text-xs text-muted-foreground mb-1">Service Fee</p>
+                    <p className="text-lg font-bold">{formatCurrency(quotation.serviceFee)}</p>
+                  </div>
+                )}
                 <div className="rounded-lg bg-primary/10 border border-primary/20 px-4 py-3 text-sm">
                   <p className="text-xs text-primary font-semibold mb-1 uppercase tracking-wider">Total</p>
                   <p className="text-lg font-bold text-primary">
-                    {formatCurrency(quotation.totalPrice + (quotation.shippingCostEstimate ?? 0))}
+                    {formatCurrency(quotation.totalPrice + (quotation.shippingCostEstimate ?? 0) + (quotation.serviceFee ?? 0))}
                   </p>
                 </div>
               </div>

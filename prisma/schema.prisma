@@ -124,6 +124,7 @@ model Quotation {
   supplierLocation     String?
   estimatedLeadTime    Int?
   shippingCostEstimate Float?
+  serviceFee           Float?
   notes                String?
   revisionNote         String?
   status               String          @default("PENDING")
