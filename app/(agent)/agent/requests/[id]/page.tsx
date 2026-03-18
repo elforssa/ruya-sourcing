@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ArrowLeft, MapPin, Package, Hash, Calendar,
   Globe, Tag, Search, Clock, DollarSign, User,
-  FileText, ChevronDown,
+  FileText, ChevronDown, Phone,
 } from "lucide-react";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import QuotationForm from "./QuotationForm";
@@ -28,7 +28,7 @@ export default async function AgentRequestDetailPage({
   const request = await prisma.sourcingRequest.findUnique({
     where: { id: params.id },
     include: {
-      client: { select: { name: true, email: true } },
+      client: { select: { name: true, email: true, phoneNumber: true } },
       quotations: { orderBy: { version: "desc" } },
     },
   });
@@ -164,6 +164,14 @@ export default async function AgentRequestDetailPage({
                 <p className="text-xs text-muted-foreground mb-1">Client</p>
                 <p className="font-medium">{request.client.name}</p>
                 <p className="text-xs text-muted-foreground">{request.client.email}</p>
+                {request.client.phoneNumber && (
+                  <a
+                    href={`tel:${request.client.phoneNumber}`}
+                    className="text-xs text-primary flex items-center gap-1 mt-0.5 hover:underline"
+                  >
+                    <Phone className="h-3 w-3" />{request.client.phoneNumber}
+                  </a>
+                )}
               </div>
             </CardContent>
           </Card>

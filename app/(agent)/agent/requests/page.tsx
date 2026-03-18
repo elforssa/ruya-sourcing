@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate, formatCurrency, getStatusColor } from "@/lib/utils";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Phone } from "lucide-react";
 
 export default async function AgentRequestsPage() {
   const session = await getSession();
@@ -12,7 +12,7 @@ export default async function AgentRequestsPage() {
   const requests = await prisma.sourcingRequest.findMany({
     where: { assignedAgentId: session.user.id },
     include: {
-      client: { select: { name: true, email: true } },
+      client: { select: { name: true, email: true, phoneNumber: true } },
       _count: { select: { quotations: true } },
     },
     orderBy: { createdAt: "desc" },
@@ -42,6 +42,14 @@ export default async function AgentRequestsPage() {
                     <p className="text-sm text-muted-foreground mt-1">
                       Client: {req.client.name} ({req.client.email})
                     </p>
+                    {req.client.phoneNumber && (
+                      <a
+                        href={`tel:${req.client.phoneNumber}`}
+                        className="text-xs text-primary flex items-center gap-1 mt-0.5 hover:underline"
+                      >
+                        <Phone className="h-3 w-3" />{req.client.phoneNumber}
+                      </a>
+                    )}
                   </div>
                   <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(req.status)}`}>
                     {req.status.replace(/_/g, " ")}
