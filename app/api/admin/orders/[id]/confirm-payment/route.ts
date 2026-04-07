@@ -56,8 +56,9 @@ export async function POST(
     orderId:       params.id,
   });
 
-  // Save invoice to disk
-  const invoiceFilename = `invoice-${params.id}-${Date.now()}.pdf`;
+  // Save invoice to disk — sanitize ID to prevent path traversal
+  const safeId = params.id.replace(/[^a-zA-Z0-9_-]/g, "");
+  const invoiceFilename = `invoice-${safeId}-${Date.now()}.pdf`;
   const invoiceDir      = join(process.cwd(), "public", "uploads", "invoices");
   await mkdir(invoiceDir, { recursive: true });
   await writeFile(join(invoiceDir, invoiceFilename), invoiceBuffer);

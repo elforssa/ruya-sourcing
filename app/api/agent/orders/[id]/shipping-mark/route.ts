@@ -25,12 +25,20 @@ export async function PUT(
   const body = await req.json();
   const { cartons, netWeight, grossWeight, dimensions, notes, markAsSent } = body;
 
-  // Auto-generate ref on first save
+  // Auto-generate ref on first save using max existing ref to avoid collisions
   let ref = order.shippingMarkRef;
   if (!ref) {
-    const year  = new Date().getFullYear();
-    const count = await prisma.order.count();
-    ref = `RUYA-${year}-${String(count).padStart(4, "0")}`;
+    const year = new Date().getFullYear();
+    const prefix = `RUYA-${year}-`;
+    const lastOrder = await prisma.order.findFirst({
+      where: { shippingMarkRef: { startsWith: prefix } },
+      orderBy: { shippingMarkRef: "desc" },
+      select: { shippingMarkRef: true },
+    });
+    const lastNum = lastOrder?.shippingMarkRef
+      ? parseInt(lastOrder.shippingMarkRef.replace(prefix, ""), 10)
+      : 0;
+    ref = `${prefix}${String((isNaN(lastNum) ? 0 : lastNum) + 1).padStart(4, "0")}`;
   }
 
   const updated = await prisma.order.update({

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendQuotationReceivedEmail } from "@/lib/email";
 import { createNotification } from "@/lib/notifications";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(
   req: NextRequest,
@@ -12,6 +13,15 @@ export async function POST(
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "AGENT") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const rl = await rateLimit(`quotation:${session.user.id}`, 20, 60 * 60 * 1000);
+    if (!rl.ok) {
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+    }
+  } catch {
+    // Rate limiter unavailable — allow through
   }
 
   const request = await prisma.sourcingRequest.findUnique({
@@ -36,6 +46,20 @@ export async function POST(
     return NextResponse.json({ error: "Unit price is required" }, { status: 400 });
   }
 
+  const parsedUnitPrice = parseFloat(unitPrice);
+  const parsedTotalPrice = parseFloat(totalPrice);
+  const parsedShipping = shippingCostEstimate ? parseFloat(shippingCostEstimate) : null;
+  const parsedServiceFee = serviceFee ? parseFloat(serviceFee) : null;
+
+  if (
+    parsedUnitPrice < 0 || !isFinite(parsedUnitPrice) ||
+    parsedTotalPrice < 0 || !isFinite(parsedTotalPrice) ||
+    (parsedShipping !== null && (parsedShipping < 0 || !isFinite(parsedShipping))) ||
+    (parsedServiceFee !== null && (parsedServiceFee < 0 || !isFinite(parsedServiceFee)))
+  ) {
+    return NextResponse.json({ error: "Prices must be non-negative finite numbers" }, { status: 400 });
+  }
+
   const prevQuotation = request.quotations[0] ?? null;
   const prevVersion = prevQuotation?.version ?? 0;
   const isRevision = prevQuotation?.status === "REVISION_REQUESTED";
@@ -46,11 +70,11 @@ export async function POST(
         requestId: params.id,
         agentId: session.user.id,
         supplierLocation: supplierLocation?.trim() || null,
-        unitPrice: parseFloat(unitPrice),
-        totalPrice: parseFloat(totalPrice),
+        unitPrice: parsedUnitPrice,
+        totalPrice: parsedTotalPrice,
         estimatedLeadTime: estimatedLeadTime ? parseInt(estimatedLeadTime) : null,
-        shippingCostEstimate: shippingCostEstimate ? parseFloat(shippingCostEstimate) : null,
-        serviceFee: serviceFee ? parseFloat(serviceFee) : null,
+        shippingCostEstimate: parsedShipping,
+        serviceFee: parsedServiceFee,
         notes: notes?.trim() || null,
         status: "PENDING",
         version: prevVersion + 1,

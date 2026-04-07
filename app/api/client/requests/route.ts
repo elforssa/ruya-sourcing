@@ -4,12 +4,22 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendNewRequestAvailableEmail } from "@/lib/email";
 import { createNotification } from "@/lib/notifications";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
 
   if (!session || session.user.role !== "CLIENT") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const rl = await rateLimit(`create-request:${session.user.id}`, 10, 60 * 60 * 1000);
+    if (!rl.ok) {
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+    }
+  } catch {
+    // Rate limiter unavailable — allow through
   }
 
   const body = await req.json();

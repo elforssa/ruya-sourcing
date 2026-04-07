@@ -6,8 +6,14 @@ const FROM     = process.env.EMAIL_FROM ?? "Ruya Services <noreply@mail.ruya.ser
 const BASE_URL = process.env.NEXTAUTH_URL ?? "https://ruya.services";
 // During development/testing with Resend free tier, set DEV_EMAIL_TO to your
 // Resend account email to receive all notifications regardless of recipient.
-const resolveRecipient = (actual: string) =>
-  process.env.DEV_EMAIL_TO ?? actual;
+// Guard: DEV_EMAIL_TO must not be set in production to prevent email misrouting.
+const resolveRecipient = (actual: string) => {
+  if (process.env.NODE_ENV === "production" && process.env.DEV_EMAIL_TO) {
+    console.warn("[email] WARNING: DEV_EMAIL_TO is set in production — ignoring it");
+    return actual;
+  }
+  return process.env.DEV_EMAIL_TO ?? actual;
+};
 
 const logEmailAttempt = (name: string, actualTo: string, subject: string) => {
   const resolvedTo = resolveRecipient(actualTo);

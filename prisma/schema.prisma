@@ -45,6 +45,8 @@ model Notification {
   isRead    Boolean  @default(false)
   link      String?
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Account {
@@ -71,6 +73,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model VerificationToken {
@@ -98,8 +102,11 @@ model SourcingRequest {
   assignedAgentId    String?
   orders             Order[]
   quotations         Quotation[]
-  agent              User?       @relation("AgentRequests", fields: [assignedAgentId], references: [id])
+  agent              User?       @relation("AgentRequests", fields: [assignedAgentId], references: [id], onDelete: SetNull)
   client             User        @relation("ClientRequests", fields: [clientId], references: [id])
+
+  @@index([clientId])
+  @@index([assignedAgentId])
 }
 
 model Quotation {
@@ -121,6 +128,9 @@ model Quotation {
   orders               Order[]
   agent                User            @relation(fields: [agentId], references: [id])
   request              SourcingRequest @relation(fields: [requestId], references: [id])
+
+  @@index([requestId])
+  @@index([agentId])
 }
 
 model RoleChangeLog {
@@ -162,4 +172,8 @@ model Order {
   client                  User            @relation(fields: [clientId], references: [id])
   quotation               Quotation       @relation(fields: [quotationId], references: [id])
   request                 SourcingRequest @relation(fields: [requestId], references: [id])
+
+  @@index([clientId])
+  @@index([requestId])
+  @@index([quotationId])
 }

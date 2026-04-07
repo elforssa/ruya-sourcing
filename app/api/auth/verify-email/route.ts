@@ -12,12 +12,9 @@ export async function GET(req: NextRequest) {
     where: { verificationToken: token },
   });
 
-  if (!user) {
+  // Use a generic error for both invalid and expired tokens to prevent enumeration
+  if (!user || !user.verificationTokenExpiry || user.verificationTokenExpiry < new Date()) {
     return NextResponse.redirect(new URL("/auth/login?error=invalid-token", req.url));
-  }
-
-  if (!user.verificationTokenExpiry || user.verificationTokenExpiry < new Date()) {
-    return NextResponse.redirect(new URL("/auth/login?error=expired-token", req.url));
   }
 
   await prisma.user.update({

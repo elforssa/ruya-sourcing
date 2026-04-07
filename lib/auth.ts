@@ -80,7 +80,31 @@ export const authOptions: NextAuthOptions = {
         token.role = (user as { role: string }).role;
         token.emailVerified = (user as { emailVerified?: Date | null }).emailVerified ?? null;
         token.isActive = (user as { isActive?: boolean }).isActive ?? true;
+        token.lastDbCheck = Date.now();
       }
+
+      // Re-check isActive from DB every 5 minutes to catch bans promptly
+      const CHECK_INTERVAL_MS = 5 * 60 * 1000;
+      if (
+        !user &&
+        token.id &&
+        (typeof token.lastDbCheck !== "number" || Date.now() - token.lastDbCheck > CHECK_INTERVAL_MS)
+      ) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { isActive: true, role: true },
+          });
+          if (dbUser) {
+            token.isActive = dbUser.isActive;
+            token.role = dbUser.role;
+          }
+          token.lastDbCheck = Date.now();
+        } catch {
+          // DB unavailable — keep existing token values
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {

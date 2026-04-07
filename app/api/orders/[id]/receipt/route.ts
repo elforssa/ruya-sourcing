@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { sendPaymentReceiptNotification } from "@/lib/email";
 import { createNotification } from "@/lib/notifications";
 import cloudinary from "@/lib/cloudinary";
+import { rateLimit } from "@/lib/rate-limit";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 const ALLOWED  = ["image/jpeg", "image/png", "application/pdf"];
@@ -27,6 +28,15 @@ export async function POST(
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "CLIENT") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const rl = await rateLimit(`receipt:${session.user.id}`, 10, 60 * 60 * 1000);
+    if (!rl.ok) {
+      return NextResponse.json({ error: "Too many uploads. Please try again later." }, { status: 429 });
+    }
+  } catch {
+    // Rate limiter unavailable — allow through
   }
 
   const order = await prisma.order.findUnique({

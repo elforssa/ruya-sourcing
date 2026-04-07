@@ -59,7 +59,7 @@ export async function PUT(
   const allowedNext = ALLOWED_TRANSITIONS[currentStatus];
   if (status !== currentStatus && status !== allowedNext) {
     return NextResponse.json(
-      { error: `Cannot transition from ${currentStatus.replace(/_/g, " ")} to ${status.replace(/_/g, " ")}. Next allowed status: ${allowedNext?.replace(/_/g, " ") ?? "none"}.` },
+      { error: "Invalid status transition." },
       { status: 400 }
     );
   }
