@@ -83,17 +83,17 @@ export default async function AdminUsersPage({
   });
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-screen-xl mx-auto">
-      <div className="flex items-start justify-between mb-8">
+    <div className="mx-auto max-w-screen-xl p-4 sm:p-6 lg:p-8">
+      <div className="mb-8 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">User Management</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl font-bold sm:text-3xl">User Management</h1>
+          <p className="mt-1 text-muted-foreground">
             {clients.length} clients · {agents.length} agents
           </p>
         </div>
       </div>
 
-      <Card>
+      <Card className="border-0 shadow-elevation-1">
         <CardContent className="pt-6">
           <UsersClient
             clients={clients}

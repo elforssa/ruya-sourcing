@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Eye, EyeOff, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { AuthLayout } from "@/components/auth-layout";
 
 function getStrength(password: string): { level: 0 | 1 | 2 | 3; label: string; color: string } {
   if (!password) return { level: 0, label: "", color: "" };
@@ -11,16 +13,11 @@ function getStrength(password: string): { level: 0 | 1 | 2 | 3; label: string; c
   const hasSpecial = /[^A-Za-z0-9]/.test(password);
   const long = password.length >= 8;
   const types = [hasUpper, hasNumber, hasSpecial].filter(Boolean).length;
-  if (!long) return { level: 1, label: "Weak", color: "#ef4444" };
-  if (types < 2) return { level: 1, label: "Weak", color: "#ef4444" };
-  if (types === 2) return { level: 2, label: "Medium", color: "#f59e0b" };
-  return { level: 3, label: "Strong", color: "#22c55e" };
+  if (!long) return { level: 1, label: "Weak", color: "bg-red-500" };
+  if (types < 2) return { level: 1, label: "Weak", color: "bg-red-500" };
+  if (types === 2) return { level: 2, label: "Medium", color: "bg-amber-500" };
+  return { level: 3, label: "Strong", color: "bg-emerald-500" };
 }
-
-const inputStyle = {
-  background: "rgba(7,21,38,0.8)",
-  border: "1px solid rgba(201,168,76,0.2)",
-} as const;
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -31,8 +28,8 @@ export default function RegisterPage() {
   const [terms, setTerms] = useState(false);
   const [showPw, setShowPw] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [loading,    setLoading]    = useState(false);
-  const [error,      setError]      = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [emailError, setEmailError] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
 
@@ -76,274 +73,201 @@ export default function RegisterPage() {
     }
   };
 
-  const focusBorder = (e: React.FocusEvent<HTMLInputElement>) =>
-    (e.target.style.borderColor = "rgba(201,168,76,0.6)");
-  const blurBorder = (e: React.FocusEvent<HTMLInputElement>) =>
-    (e.target.style.borderColor = "rgba(201,168,76,0.2)");
+  const inputBase = "h-12 w-full rounded-lg border bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-accent/20";
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-4 py-10"
-      style={{ background: "linear-gradient(135deg, #071526 0%, #0B1F3B 50%, #0F2744 100%)" }}
-    >
-      <div className="w-full max-w-md">
+    <AuthLayout>
+      <div>
+        <h1 className="mb-1 text-2xl font-bold text-foreground">Create your account</h1>
+        <p className="mb-8 text-sm text-muted-foreground">
+          Join RUYA to start sourcing products globally
+        </p>
 
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <img src="/logo-v2.png" alt="RUYA" className="h-14 w-auto mx-auto" />
-        </div>
-
-        {/* Card */}
-        <div
-          className="rounded-2xl p-8 shadow-2xl"
-          style={{
-            background: "rgba(15,39,68,0.8)",
-            border: "1px solid rgba(201,168,76,0.15)",
-            backdropFilter: "blur(10px)",
-          }}
-        >
-          <h2 className="text-lg font-semibold text-white mb-1">Create your account</h2>
-          <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.4)" }}>
-            Join RUYA to start sourcing products globally
-          </p>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-
-            {/* Full name */}
-            <div>
-              <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider" style={{ color: "rgba(201,168,76,0.7)" }}>
-                Full name
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                placeholder="Jane Smith"
-                className="w-full rounded-lg px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none transition-all"
-                style={inputStyle}
-                onFocus={focusBorder}
-                onBlur={blurBorder}
-              />
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider" style={{ color: "rgba(201,168,76,0.7)" }}>
-                Email address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => { setEmail(e.target.value); if (emailTouched) validateEmailClient(e.target.value); }}
-                required
-                placeholder="you@example.com"
-                className="w-full rounded-lg px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none transition-all"
-                style={emailTouched && emailError
-                  ? { ...inputStyle, borderColor: "rgba(239,68,68,0.6)" }
-                  : inputStyle
-                }
-                onFocus={focusBorder}
-                onBlur={(e) => { blurBorder(e); setEmailTouched(true); validateEmailClient(e.target.value); }}
-              />
-              {emailTouched && emailError && (
-                <p className="mt-1.5 text-xs flex items-center gap-1" style={{ color: "#fca5a5" }}>
-                  <AlertCircle className="h-3 w-3" /> {emailError}
-                </p>
-              )}
-            </div>
-
-            {/* Password */}
-            <div>
-              <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider" style={{ color: "rgba(201,168,76,0.7)" }}>
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showPw ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={8}
-                  placeholder="Min. 8 characters"
-                  className="w-full rounded-lg px-4 py-3 pr-11 text-sm text-white placeholder:text-slate-600 focus:outline-none transition-all"
-                  style={inputStyle}
-                  onFocus={focusBorder}
-                  onBlur={blurBorder}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPw((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2"
-                  style={{ color: "rgba(255,255,255,0.35)" }}
-                >
-                  {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-
-              {/* Strength indicator */}
-              {password && (
-                <div className="mt-2 space-y-1.5">
-                  <div className="flex gap-1">
-                    {[1, 2, 3].map((lvl) => (
-                      <div
-                        key={lvl}
-                        className="h-1 flex-1 rounded-full transition-all duration-300"
-                        style={{
-                          background: strength.level >= lvl ? strength.color : "rgba(255,255,255,0.1)",
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-xs" style={{ color: strength.color }}>
-                    {strength.label} password
-                    {strength.level < 3 && (
-                      <span style={{ color: "rgba(255,255,255,0.3)" }}>
-                        {" "}— add {strength.level === 1 ? "uppercase letters, numbers & symbols" : "symbols"} to strengthen
-                      </span>
-                    )}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Confirm password */}
-            <div>
-              <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider" style={{ color: "rgba(201,168,76,0.7)" }}>
-                Confirm password
-              </label>
-              <div className="relative">
-                <input
-                  type={showConfirm ? "text" : "password"}
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  required
-                  placeholder="Re-enter your password"
-                  className="w-full rounded-lg px-4 py-3 pr-11 text-sm text-white placeholder:text-slate-600 focus:outline-none transition-all"
-                  style={inputStyle}
-                  onFocus={focusBorder}
-                  onBlur={blurBorder}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2"
-                  style={{ color: "rgba(255,255,255,0.35)" }}
-                >
-                  {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              {confirm && password !== confirm && (
-                <p className="mt-1.5 text-xs flex items-center gap-1" style={{ color: "#fca5a5" }}>
-                  <AlertCircle className="h-3 w-3" /> Passwords do not match
-                </p>
-              )}
-              {confirm && password === confirm && confirm.length > 0 && (
-                <p className="mt-1.5 text-xs flex items-center gap-1" style={{ color: "#86efac" }}>
-                  <CheckCircle2 className="h-3 w-3" /> Passwords match
-                </p>
-              )}
-            </div>
-
-            {/* Terms */}
-            <label className="flex items-start gap-3 cursor-pointer group">
-              <div className="relative mt-0.5 shrink-0">
-                <input
-                  type="checkbox"
-                  checked={terms}
-                  onChange={(e) => setTerms(e.target.checked)}
-                  className="sr-only"
-                />
-                <div
-                  className="h-4 w-4 rounded flex items-center justify-center transition-all"
-                  style={{
-                    background: terms ? "#C9A84C" : "rgba(7,21,38,0.8)",
-                    border: `1px solid ${terms ? "#C9A84C" : "rgba(201,168,76,0.3)"}`,
-                  }}
-                >
-                  {terms && (
-                    <svg className="h-2.5 w-2.5" viewBox="0 0 10 10" fill="none">
-                      <path d="M1.5 5l2.5 2.5 4.5-5" stroke="#0B1F3B" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
-                </div>
-              </div>
-              <span className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
-                I agree to the{" "}
-                <span className="font-semibold" style={{ color: "rgba(201,168,76,0.8)" }}>
-                  terms of service
-                </span>{" "}
-                and acknowledge that RUYA may contact me about my account.
-              </span>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Full name */}
+          <div>
+            <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-foreground">
+              Full name
             </label>
+            <input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              placeholder="Jane Smith"
+              className={`${inputBase} border-input focus:border-accent`}
+            />
+          </div>
 
-            {/* Error */}
-            {error && (
-              <div
-                className="flex items-start gap-2 rounded-lg px-4 py-3 text-sm"
-                style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", color: "#fca5a5" }}
+          {/* Email */}
+          <div>
+            <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
+              Email address
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); if (emailTouched) validateEmailClient(e.target.value); }}
+              required
+              placeholder="you@example.com"
+              className={`${inputBase} ${emailTouched && emailError ? "border-destructive focus:border-destructive focus:ring-destructive/20" : "border-input focus:border-accent"}`}
+              onBlur={(e) => { setEmailTouched(true); validateEmailClient(e.target.value); }}
+            />
+            {emailTouched && emailError && (
+              <p className="mt-1.5 flex items-center gap-1 text-xs text-destructive">
+                <AlertCircle className="h-3 w-3" /> {emailError}
+              </p>
+            )}
+          </div>
+
+          {/* Password */}
+          <div>
+            <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-foreground">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPw ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                placeholder="Min. 8 characters"
+                className={`${inputBase} border-input pr-11 focus:border-accent`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                aria-label={showPw ? "Hide password" : "Show password"}
               >
-                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                {error}
+                {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+
+            {/* Strength bar */}
+            {password && (
+              <div className="mt-2 space-y-1">
+                <div className="flex gap-1">
+                  {[1, 2, 3].map((lvl) => (
+                    <div
+                      key={lvl}
+                      className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                        strength.level >= lvl ? strength.color : "bg-muted"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  <span className={strength.level >= 3 ? "text-emerald-600" : strength.level >= 2 ? "text-amber-600" : "text-red-600"}>
+                    {strength.label}
+                  </span>
+                  {strength.level < 3 && (
+                    <span> — add {strength.level === 1 ? "uppercase, numbers & symbols" : "symbols"}</span>
+                  )}
+                </p>
               </div>
             )}
+          </div>
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading || !!(emailTouched && emailError)}
-              className="w-full rounded-lg py-3 text-sm font-bold tracking-wider uppercase transition-all mt-1 flex items-center justify-center gap-2"
-              style={{
-                background: (loading || !!(emailTouched && emailError)) ? "rgba(201,168,76,0.4)" : "#C9A84C",
-                color: (loading || !!(emailTouched && emailError)) ? "rgba(11,31,59,0.6)" : "#0B1F3B",
-                cursor: (loading || !!(emailTouched && emailError)) ? "not-allowed" : "pointer",
-                boxShadow: (loading || !!(emailTouched && emailError)) ? "none" : "0 4px 20px rgba(201,168,76,0.3)",
-              }}
-            >
-              {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Creating account…</> : "Create Account"}
-            </button>
-          </form>
-
-          {/* Sign in link */}
-          <div className="mt-6 pt-5 border-t text-center" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-            <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
-              Already have an account?{" "}
-              <a
-                href="/auth/login"
-                className="font-semibold"
-                style={{ color: "#C9A84C" }}
+          {/* Confirm password */}
+          <div>
+            <label htmlFor="confirm" className="mb-1.5 block text-sm font-medium text-foreground">
+              Confirm password
+            </label>
+            <div className="relative">
+              <input
+                id="confirm"
+                type={showConfirm ? "text" : "password"}
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                required
+                placeholder="Re-enter your password"
+                className={`${inputBase} border-input pr-11 focus:border-accent`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                aria-label={showConfirm ? "Hide password" : "Show password"}
               >
-                Sign in
-              </a>
-            </p>
+                {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            {confirm && password !== confirm && (
+              <p className="mt-1.5 flex items-center gap-1 text-xs text-destructive">
+                <AlertCircle className="h-3 w-3" /> Passwords do not match
+              </p>
+            )}
+            {confirm && password === confirm && confirm.length > 0 && (
+              <p className="mt-1.5 flex items-center gap-1 text-xs text-emerald-600">
+                <CheckCircle2 className="h-3 w-3" /> Passwords match
+              </p>
+            )}
           </div>
-        </div>
 
-        <div className="mt-6 text-center space-y-2">
-          <div className="flex items-center justify-center gap-4 text-xs">
-            <a
-              href="/legal/terms"
-              style={{ color: "rgba(255,255,255,0.25)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(201,168,76,0.7)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.25)")}
-            >
-              Terms of Service
-            </a>
-            <span style={{ color: "rgba(255,255,255,0.12)" }}>·</span>
-            <a
-              href="/legal/privacy"
-              style={{ color: "rgba(255,255,255,0.25)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(201,168,76,0.7)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.25)")}
-            >
-              Privacy Policy
-            </a>
-          </div>
-          <p className="text-xs" style={{ color: "rgba(255,255,255,0.12)" }}>
-            © {new Date().getFullYear()} RUYA. All rights reserved.
+          {/* Terms */}
+          <label className="group flex cursor-pointer items-start gap-3">
+            <div className="relative mt-0.5 shrink-0">
+              <input
+                type="checkbox"
+                checked={terms}
+                onChange={(e) => setTerms(e.target.checked)}
+                className="sr-only"
+              />
+              <div className={`flex h-4 w-4 items-center justify-center rounded border transition-all ${
+                terms ? "border-accent bg-accent" : "border-input bg-background"
+              }`}>
+                {terms && (
+                  <svg className="h-2.5 w-2.5" viewBox="0 0 10 10" fill="none">
+                    <path d="M1.5 5l2.5 2.5 4.5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-accent-foreground" />
+                  </svg>
+                )}
+              </div>
+            </div>
+            <span className="text-xs leading-relaxed text-muted-foreground">
+              I agree to the{" "}
+              <Link href="/legal/terms" className="font-semibold text-accent hover:underline">
+                terms of service
+              </Link>{" "}
+              and acknowledge that RUYA may contact me about my account.
+            </span>
+          </label>
+
+          {/* Error */}
+          {error && (
+            <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              {error}
+            </div>
+          )}
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={loading || !!(emailTouched && emailError)}
+            className="btn-press flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-accent text-sm font-bold text-accent-foreground transition-all hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Creating account...</>
+            ) : (
+              "Create Account"
+            )}
+          </button>
+        </form>
+
+        <div className="mt-8 border-t border-border pt-6 text-center">
+          <p className="text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Link href="/auth/login" className="font-semibold text-accent transition-colors hover:text-accent/80">
+              Sign in
+            </Link>
           </p>
         </div>
       </div>
-    </div>
+    </AuthLayout>
   );
 }

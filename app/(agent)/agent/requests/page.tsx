@@ -1,9 +1,11 @@
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatDate, formatCurrency, getStatusColor } from "@/lib/utils";
+import { StatusBadge } from "@/components/StatusBadge";
+import { EmptyState } from "@/components/EmptyState";
+import { formatDate, formatCurrency } from "@/lib/utils";
 import Link from "next/link";
-import { ArrowRight, Phone } from "lucide-react";
+import { ArrowRight, Phone, ClipboardList } from "lucide-react";
 
 export default async function AgentRequestsPage() {
   const session = await getSession();
@@ -21,58 +23,60 @@ export default async function AgentRequestsPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Assigned Requests</h1>
-        <p className="text-muted-foreground mt-1">Manage sourcing requests assigned to you.</p>
+        <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Assigned Requests</h1>
+        <p className="mt-1 text-muted-foreground">Manage sourcing requests assigned to you.</p>
       </div>
 
       {requests.length === 0 ? (
-        <Card>
-          <CardContent className="py-16 text-center text-muted-foreground">
-            No requests assigned yet.
+        <Card className="border-0 shadow-elevation-1">
+          <CardContent>
+            <EmptyState
+              icon={ClipboardList}
+              title="No requests assigned yet"
+              description="Pick up requests from the dashboard to get started."
+            />
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4">
           {requests.map((req) => (
-            <Card key={req.id}>
+            <Card key={req.id} className="border-0 border-l-[3px] border-l-transparent shadow-elevation-1 transition-all hover:border-l-accent hover:shadow-elevation-2">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div>
                     <CardTitle className="text-base">{req.productName}</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       Client: {req.client.name} ({req.client.email})
                     </p>
                     {req.client.phoneNumber && (
                       <a
                         href={`tel:${req.client.phoneNumber}`}
-                        className="text-xs text-primary flex items-center gap-1 mt-0.5 hover:underline"
+                        className="mt-0.5 flex items-center gap-1 text-xs text-accent hover:underline"
                       >
                         <Phone className="h-3 w-3" />{req.client.phoneNumber}
                       </a>
                     )}
                   </div>
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(req.status)}`}>
-                    {req.status.replace(/_/g, " ")}
-                  </span>
+                  <StatusBadge status={req.status} size="sm" />
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{req.description}</p>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 text-sm">
+                <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">{req.description}</p>
+                <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4 sm:gap-4">
                   <div>
-                    <p className="text-muted-foreground text-xs">Service</p>
+                    <p className="text-xs text-muted-foreground">Service</p>
                     <p className="font-medium">{req.serviceType.replace(/_/g, " ")}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-xs">Quantity</p>
+                    <p className="text-xs text-muted-foreground">Quantity</p>
                     <p className="font-medium">{req.quantity.toLocaleString()} units</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-xs">Target Price</p>
-                    <p className="font-medium">{req.targetPrice ? formatCurrency(req.targetPrice) : "—"}</p>
+                    <p className="text-xs text-muted-foreground">Target Price</p>
+                    <p className="font-mono font-medium">{req.targetPrice ? formatCurrency(req.targetPrice) : "—"}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-xs">Submitted</p>
+                    <p className="text-xs text-muted-foreground">Submitted</p>
                     <p className="font-medium">{formatDate(req.createdAt)}</p>
                   </div>
                 </div>
@@ -84,7 +88,7 @@ export default async function AgentRequestsPage() {
                   )}
                   <Link
                     href={`/agent/requests/${req.id}`}
-                    className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold hover:opacity-90 transition-all"
+                    className="btn-press ml-auto inline-flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition-all hover:bg-accent/90"
                   >
                     View &amp; Quote <ArrowRight className="h-3.5 w-3.5" />
                   </Link>

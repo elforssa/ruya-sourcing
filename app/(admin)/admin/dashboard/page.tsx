@@ -45,41 +45,36 @@ export default async function AdminDashboard() {
   ]);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-screen-2xl mx-auto space-y-8">
-
+    <div className="mx-auto max-w-screen-2xl space-y-8 p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Admin Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Platform overview, analytics, and management tools.</p>
+        <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Admin Dashboard</h1>
+        <p className="mt-1 text-muted-foreground">Platform overview, analytics, and management tools.</p>
       </div>
 
-      {/* Dynamic KPI analytics — date-range aware, client-side */}
       <AnalyticsSection />
 
-      {/* Agent Workload */}
-      <Card>
+      <Card className="border-0 shadow-elevation-1">
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Agent Workload</CardTitle>
-          <p className="text-sm text-muted-foreground">Live workload across all active agents — active requests and orders in progress.</p>
+          <p className="text-sm text-muted-foreground">Live workload across all active agents.</p>
         </CardHeader>
         <CardContent>
           <AgentWorkloadSection />
         </CardContent>
       </Card>
 
-      {/* Requests Management */}
-      <Card>
+      <Card className="border-0 shadow-elevation-1">
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Sourcing Requests</CardTitle>
-          <p className="text-sm text-muted-foreground">Filter by status, agent, or date — assign agents to unassigned requests inline.</p>
+          <p className="text-sm text-muted-foreground">Filter by status, agent, or date — assign agents inline.</p>
         </CardHeader>
         <CardContent>
           <RequestsTable requests={allRequests} agents={agents} />
         </CardContent>
       </Card>
 
-      {/* User Management */}
-      <Card>
+      <Card className="border-0 shadow-elevation-1">
         <CardHeader className="pb-2">
           <CardTitle className="text-base">User Management</CardTitle>
           <p className="text-sm text-muted-foreground">All clients and agents — activate or deactivate accounts.</p>
@@ -89,13 +84,12 @@ export default async function AdminDashboard() {
         </CardContent>
       </Card>
 
-      {/* Orders */}
-      <Card>
+      <Card className="border-0 shadow-elevation-1">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-base">Orders</CardTitle>
-              <p className="text-sm text-muted-foreground">All orders across all clients and agents — filter by status.</p>
+              <p className="text-sm text-muted-foreground">All orders across clients and agents.</p>
             </div>
             <span className="text-sm font-semibold text-muted-foreground">{allOrders.length} total</span>
           </div>

@@ -3,7 +3,9 @@
 import { useState, Suspense } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CheckCircle2, AlertCircle } from "lucide-react";
+import Link from "next/link";
+import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { AuthLayout } from "@/components/auth-layout";
 
 function redirectByRole(role: string | undefined, router: ReturnType<typeof useRouter>) {
   if (role === "ADMIN") router.push("/admin/dashboard");
@@ -61,213 +63,116 @@ function LoginForm() {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-4"
-      style={{ background: "linear-gradient(135deg, #071526 0%, #0B1F3B 50%, #0F2744 100%)" }}
-    >
-      <div className="w-full max-w-md">
+    <AuthLayout>
+      <div>
+        <h1 className="mb-1 text-2xl font-bold text-foreground">Welcome back</h1>
+        <p className="mb-8 text-sm text-muted-foreground">
+          Sign in to access your sourcing dashboard
+        </p>
 
-        {/* Logo */}
-        <div className="text-center mb-10">
-          <img src="/logo-v2.png" alt="RUYA" className="h-16 w-auto mx-auto" />
-        </div>
+        {/* Success banners */}
+        {reset && (
+          <div className="mb-5 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
+            Password reset successfully. Please sign in.
+          </div>
+        )}
 
-        {/* Card */}
-        <div
-          className="rounded-2xl p-8 shadow-2xl"
-          style={{
-            background: "rgba(15,39,68,0.8)",
-            border: "1px solid rgba(201,168,76,0.15)",
-            backdropFilter: "blur(10px)",
-          }}
-        >
-          <h2 className="text-lg font-semibold text-white mb-1">Welcome back</h2>
-          <p className="text-sm mb-5" style={{ color: "rgba(255,255,255,0.4)" }}>
-            Sign in to access your sourcing dashboard
-          </p>
+        {verified && (
+          <div className="mb-5 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
+            Email verified! You can now sign in.
+          </div>
+        )}
 
-          {/* Password reset success banner */}
-          {reset && (
-            <div
-              className="flex items-center gap-2 rounded-lg px-4 py-3 mb-5 text-sm"
-              style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", color: "#86efac" }}
-            >
-              <CheckCircle2 className="h-4 w-4 shrink-0" />
-              Password reset successfully. Please sign in.
-            </div>
-          )}
-
-          {/* Email verified success banner */}
-          {verified && (
-            <div
-              className="flex items-center gap-2 rounded-lg px-4 py-3 mb-5 text-sm"
-              style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", color: "#86efac" }}
-            >
-              <CheckCircle2 className="h-4 w-4 shrink-0" />
-              Email verified! You can now sign in.
-            </div>
-          )}
-
-          {/* Suspended account banner */}
-          {isSuspended && (
-            <div
-              className="flex items-start gap-2 rounded-lg px-4 py-3 mb-5 text-sm"
-              style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", color: "#fca5a5" }}
-            >
-              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-              <span>
-                Your account has been suspended.{" "}
-                <a href="mailto:support@ruya-sourcing.com" style={{ color: "#fca5a5", textDecoration: "underline" }}>
-                  Contact support@ruya-sourcing.com
-                </a>
-              </span>
-            </div>
-          )}
-
-          {/* Token error banner */}
-          {!isSuspended && tokenError && TOKEN_ERROR_MESSAGES[tokenError] && (
-            <div
-              className="flex items-center gap-2 rounded-lg px-4 py-3 mb-5 text-sm"
-              style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", color: "#fca5a5" }}
-            >
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              {TOKEN_ERROR_MESSAGES[tokenError]}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email */}
-            <div>
-              <label
-                className="block text-xs font-medium mb-1.5 uppercase tracking-wider"
-                style={{ color: "rgba(201,168,76,0.7)" }}
-              >
-                Email address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="you@example.com"
-                className="w-full rounded-lg px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none transition-all"
-                style={{
-                  background: "rgba(7,21,38,0.8)",
-                  border: "1px solid rgba(201,168,76,0.2)",
-                }}
-                onFocus={(e) => (e.target.style.borderColor = "rgba(201,168,76,0.6)")}
-                onBlur={(e) => (e.target.style.borderColor = "rgba(201,168,76,0.2)")}
-              />
-            </div>
-
-            {/* Password */}
-            <div>
-              <label
-                className="block text-xs font-medium mb-1.5 uppercase tracking-wider"
-                style={{ color: "rgba(201,168,76,0.7)" }}
-              >
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="••••••••"
-                className="w-full rounded-lg px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none transition-all"
-                style={{
-                  background: "rgba(7,21,38,0.8)",
-                  border: "1px solid rgba(201,168,76,0.2)",
-                }}
-                onFocus={(e) => (e.target.style.borderColor = "rgba(201,168,76,0.6)")}
-                onBlur={(e) => (e.target.style.borderColor = "rgba(201,168,76,0.2)")}
-              />
-              <div className="flex justify-end mt-1.5">
-                <a
-                  href="/auth/forgot-password"
-                  className="text-xs transition-colors"
-                  style={{ color: "rgba(201,168,76,0.6)" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(201,168,76,1)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(201,168,76,0.6)")}
-                >
-                  Forgot your password?
-                </a>
-              </div>
-            </div>
-
-            {/* Error */}
-            {error && (
-              <div
-                className="rounded-lg px-4 py-3 text-sm"
-                style={{
-                  background: "rgba(239,68,68,0.1)",
-                  border: "1px solid rgba(239,68,68,0.25)",
-                  color: "#fca5a5",
-                }}
-              >
-                {error}
-              </div>
-            )}
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-lg py-3 text-sm font-bold tracking-wider uppercase transition-all mt-2"
-              style={{
-                background: loading ? "rgba(201,168,76,0.4)" : "#C9A84C",
-                color: loading ? "rgba(11,31,59,0.6)" : "#0B1F3B",
-                cursor: loading ? "not-allowed" : "pointer",
-                boxShadow: loading ? "none" : "0 4px 20px rgba(201,168,76,0.3)",
-              }}
-            >
-              {loading ? "Signing in…" : "Sign In"}
-            </button>
-          </form>
-
-          <div className="mt-6 pt-5 border-t text-center" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-            <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
-              Don&apos;t have an account?{" "}
-              <a
-                href="/auth/register"
-                className="font-semibold transition-colors"
-                style={{ color: "#C9A84C" }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.8")}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-              >
-                Sign up
+        {isSuspended && (
+          <div className="mb-5 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>
+              Your account has been suspended.{" "}
+              <a href="mailto:support@ruya-sourcing.com" className="font-medium underline">
+                Contact support
               </a>
-            </p>
+            </span>
           </div>
-        </div>
+        )}
 
-        {/* Footer */}
-        <div className="mt-6 text-center space-y-2">
-          <div className="flex items-center justify-center gap-4 text-xs">
-            <a
-              href="/legal/terms"
-              style={{ color: "rgba(255,255,255,0.25)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(201,168,76,0.7)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.25)")}
-            >
-              Terms of Service
-            </a>
-            <span style={{ color: "rgba(255,255,255,0.12)" }}>·</span>
-            <a
-              href="/legal/privacy"
-              style={{ color: "rgba(255,255,255,0.25)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(201,168,76,0.7)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.25)")}
-            >
-              Privacy Policy
-            </a>
+        {!isSuspended && tokenError && TOKEN_ERROR_MESSAGES[tokenError] && (
+          <div className="mb-5 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            {TOKEN_ERROR_MESSAGES[tokenError]}
           </div>
-          <p className="text-xs" style={{ color: "rgba(255,255,255,0.12)" }}>
-            © {new Date().getFullYear()} RUYA. All rights reserved.
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
+              Email address
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="you@example.com"
+              className="h-12 w-full rounded-lg border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-foreground">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="Enter your password"
+              className="h-12 w-full rounded-lg border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+            />
+            <div className="mt-1.5 flex justify-end">
+              <Link
+                href="/auth/forgot-password"
+                className="text-xs font-medium text-accent transition-colors hover:text-accent/80"
+              >
+                Forgot your password?
+              </Link>
+            </div>
+          </div>
+
+          {error && (
+            <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn-press flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-accent text-sm font-bold text-accent-foreground transition-all hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Signing in...</>
+            ) : (
+              "Sign In"
+            )}
+          </button>
+        </form>
+
+        <div className="mt-8 border-t border-border pt-6 text-center">
+          <p className="text-sm text-muted-foreground">
+            Don&apos;t have an account?{" "}
+            <Link href="/auth/register" className="font-semibold text-accent transition-colors hover:text-accent/80">
+              Sign up
+            </Link>
           </p>
         </div>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
 

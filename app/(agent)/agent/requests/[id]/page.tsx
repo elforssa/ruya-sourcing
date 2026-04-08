@@ -8,7 +8,8 @@ import {
   Globe, Tag, Search, Clock, DollarSign, User,
   FileText, ChevronDown, Phone,
 } from "lucide-react";
-import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import { StatusBadge } from "@/components/StatusBadge";
 import QuotationForm from "./QuotationForm";
 
 const SERVICE_ICONS: Record<string, React.ElementType> = {
@@ -75,9 +76,7 @@ export default async function AgentRequestDetailPage({
               </span>
             </div>
           </div>
-          <span className={`inline-flex items-center self-start rounded-full px-3 py-1 text-sm font-semibold ${getStatusColor(request.status)}`}>
-            {request.status.replace(/_/g, " ")}
-          </span>
+          <StatusBadge status={request.status} />
         </div>
       </div>
 
@@ -189,9 +188,7 @@ export default async function AgentRequestDetailPage({
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                     Current Quotation <span className="text-muted-foreground font-normal">v{latestQuotation.version}</span>
                   </CardTitle>
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusColor(latestQuotation.status)}`}>
-                    {latestQuotation.status.replace(/_/g, " ")}
-                  </span>
+                  <StatusBadge status={latestQuotation.status} size="sm" />
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 text-sm">
@@ -295,9 +292,7 @@ export default async function AgentRequestDetailPage({
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-muted-foreground">{formatDate(q.createdAt)}</span>
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${getStatusColor(q.status)}`}>
-                          {q.status.replace(/_/g, " ")}
-                        </span>
+                        <StatusBadge status={q.status} size="sm" />
                       </div>
                     </div>
                     <div className="grid grid-cols-3 gap-3 text-xs">

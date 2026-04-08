@@ -46,6 +46,29 @@ export function getStatusColor(status: string) {
   return colors[status] ?? "bg-gray-100 text-gray-800";
 }
 
+export function getStatusDotColor(status: string) {
+  const dots: Record<string, string> = {
+    DRAFT: "bg-gray-400",
+    SUBMITTED: "bg-amber-500",
+    ASSIGNED: "bg-blue-500",
+    QUOTATION_SENT: "bg-purple-500",
+    VALIDATED: "bg-teal-500",
+    CONVERTED: "bg-green-500",
+    PENDING: "bg-amber-500",
+    ACCEPTED: "bg-green-500",
+    REVISION_REQUESTED: "bg-orange-500",
+    REJECTED: "bg-red-500",
+    CONFIRMED: "bg-teal-500",
+    PAYMENT_PENDING: "bg-amber-500",
+    PAID: "bg-blue-500",
+    IN_PRODUCTION: "bg-cyan-500",
+    SHIPPED: "bg-violet-500",
+    DELIVERED: "bg-emerald-500",
+    CANCELLED: "bg-red-500",
+  };
+  return dots[status] ?? "bg-gray-400";
+}
+
 export function getInitials(name: string | null | undefined) {
   if (!name) return "?";
   return name

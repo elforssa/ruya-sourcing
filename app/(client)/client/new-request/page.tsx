@@ -38,7 +38,6 @@ const SERVICE_TYPES = [
     description:
       "Find the right supplier, negotiate prices, and manage the end-to-end sourcing process for you.",
     icon: Globe,
-    color: "blue",
   },
   {
     id: "PRICE_CHECK" as const,
@@ -46,7 +45,6 @@ const SERVICE_TYPES = [
     description:
       "Get competitive price quotes from multiple verified suppliers for a product you've already identified.",
     icon: Tag,
-    color: "emerald",
   },
   {
     id: "INSPECTION" as const,
@@ -54,7 +52,6 @@ const SERVICE_TYPES = [
     description:
       "Pre-shipment quality inspection of your goods to ensure they meet your specifications before delivery.",
     icon: Search,
-    color: "purple",
   },
 ];
 
@@ -186,30 +183,47 @@ export default function NewRequestPage() {
 
   const serviceInfo = SERVICE_TYPES.find((s) => s.id === formData.serviceType);
 
+  /* ── Success Screen with confetti ── */
   if (submitted) {
     return (
-      <div className="min-h-full flex items-center justify-center p-8">
-        <div className="max-w-md w-full text-center">
-          <div className="h-20 w-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="h-10 w-10 text-emerald-600" />
+      <div className="min-h-full flex items-center justify-center p-8 relative overflow-hidden">
+        {/* CSS confetti */}
+        <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+          {Array.from({ length: 24 }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute top-0 w-2 h-2 rounded-sm animate-confetti-fall"
+              style={{
+                left: `${4 + (i * 4)}%`,
+                backgroundColor: i % 3 === 0 ? "hsl(var(--accent))" : i % 3 === 1 ? "hsl(var(--primary))" : "#e2e8f0",
+                animationDelay: `${i * 0.12}s`,
+                animationDuration: `${1.8 + (i % 5) * 0.3}s`,
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="max-w-md w-full text-center relative z-10">
+          <div className="h-20 w-20 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="h-10 w-10 text-accent" />
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">Request Submitted!</h1>
           <p className="text-muted-foreground mb-2">
             Your sourcing request for <span className="font-semibold text-foreground">{formData.productName}</span> has been submitted successfully.
           </p>
           <p className="text-xs text-muted-foreground mb-8">
-            Reference: <span className="font-mono bg-muted px-1.5 py-0.5 rounded">{requestId.slice(-10).toUpperCase()}</span>
+            Reference: <span className="font-mono bg-muted px-2 py-1 rounded-md">{requestId.slice(-10).toUpperCase()}</span>
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
               onClick={() => router.push("/client/requests")}
-              className="inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90"
+              className="inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold bg-accent text-accent-foreground hover:opacity-90 btn-press transition-all"
             >
               View My Requests <ArrowRight className="h-4 w-4" />
             </button>
             <button
               onClick={() => router.push("/client/dashboard")}
-              className="inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold border border-border hover:bg-muted/50"
+              className="inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold border border-border hover:bg-muted/50 btn-press transition-colors"
             >
               Back to Dashboard
             </button>
@@ -227,7 +241,7 @@ export default function NewRequestPage() {
         <p className="text-muted-foreground mt-1">Fill in the details below and our agents will get back to you.</p>
       </div>
 
-      {/* Progress bar */}
+      {/* Step indicator — pill style with gold accents */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-3">
           {STEPS.map((label, idx) => {
@@ -240,9 +254,9 @@ export default function NewRequestPage() {
                   <div
                     className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
                       done
-                        ? "bg-primary text-primary-foreground"
+                        ? "bg-accent text-accent-foreground"
                         : active
-                        ? "bg-primary text-primary-foreground ring-4 ring-primary/20"
+                        ? "bg-accent text-accent-foreground ring-4 ring-accent/20"
                         : "bg-muted text-muted-foreground"
                     }`}
                   >
@@ -250,16 +264,18 @@ export default function NewRequestPage() {
                   </div>
                   <span
                     className={`text-sm font-medium hidden sm:block ${
-                      active ? "text-foreground" : "text-muted-foreground"
+                      done ? "text-accent" : active ? "text-foreground" : "text-muted-foreground"
                     }`}
                   >
                     {label}
                   </span>
                 </div>
                 {idx < STEPS.length - 1 && (
-                  <div className="flex-1 h-px mx-3 transition-colors" style={{
-                    background: step > n ? "hsl(var(--primary))" : "hsl(var(--border))",
-                  }} />
+                  <div
+                    className={`flex-1 h-px mx-3 transition-colors ${
+                      step > n ? "bg-accent" : "bg-border"
+                    }`}
+                  />
                 )}
               </div>
             );
@@ -267,14 +283,14 @@ export default function NewRequestPage() {
         </div>
         <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
           <div
-            className="h-full bg-primary rounded-full transition-all duration-500"
+            className="h-full bg-accent rounded-full transition-all duration-500"
             style={{ width: `${((step - 1) / (STEPS.length - 1)) * 100}%` }}
           />
         </div>
       </div>
 
       {/* Card */}
-      <div className="rounded-xl border border-border bg-card shadow-sm">
+      <div className="rounded-xl border-0 bg-card shadow-elevation-1">
 
         {/* ── STEP 1: Product Details ── */}
         {step === 1 && (
@@ -282,80 +298,86 @@ export default function NewRequestPage() {
             <h2 className="text-lg font-semibold">Product Details</h2>
 
             <div>
-              <label className="block text-sm font-medium mb-1.5">
+              <label htmlFor="productName" className="block text-sm font-medium text-muted-foreground mb-1.5">
                 Product Name <span className="text-destructive">*</span>
               </label>
               <input
+                id="productName"
                 type="text"
                 value={formData.productName}
                 onChange={(e) => { update("productName", e.target.value); clearError("productName"); }}
                 placeholder="e.g. Custom Bluetooth Earbuds"
-                className={`w-full rounded-lg border px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all ${errors.productName ? "border-destructive" : "border-input"}`}
+                className={`w-full h-12 rounded-lg border px-4 text-sm bg-background focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all ${errors.productName ? "border-destructive" : "border-input"}`}
               />
               {errors.productName && <p className="text-xs text-destructive mt-1">{errors.productName}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1.5">Description</label>
+              <label htmlFor="description" className="block text-sm font-medium text-muted-foreground mb-1.5">Description</label>
               <textarea
+                id="description"
                 value={formData.description}
                 onChange={(e) => update("description", e.target.value)}
                 placeholder="Describe the product specifications, quality requirements, packaging preferences…"
                 rows={4}
-                className="w-full rounded-lg border border-input px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all resize-none"
+                className="w-full rounded-lg border border-input px-4 py-3 text-sm bg-background focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all resize-none"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1.5">
+                <label htmlFor="quantity" className="block text-sm font-medium text-muted-foreground mb-1.5">
                   Quantity <span className="text-destructive">*</span>
                 </label>
                 <input
+                  id="quantity"
                   type="number"
                   min="1"
                   value={formData.quantity}
                   onChange={(e) => { update("quantity", e.target.value); clearError("quantity"); }}
                   placeholder="500"
-                  className={`w-full rounded-lg border px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all ${errors.quantity ? "border-destructive" : "border-input"}`}
+                  className={`w-full h-12 rounded-lg border px-4 text-sm bg-background focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all ${errors.quantity ? "border-destructive" : "border-input"}`}
                 />
                 {errors.quantity && <p className="text-xs text-destructive mt-1">{errors.quantity}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1.5">Target Unit Price (USD)</label>
+                <label htmlFor="targetPrice" className="block text-sm font-medium text-muted-foreground mb-1.5">Target Unit Price (USD)</label>
                 <input
+                  id="targetPrice"
                   type="number"
                   min="0"
                   step="0.01"
                   value={formData.targetPrice}
                   onChange={(e) => { update("targetPrice", e.target.value); clearError("targetPrice"); }}
                   placeholder="18.50"
-                  className={`w-full rounded-lg border px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all ${errors.targetPrice ? "border-destructive" : "border-input"}`}
+                  className={`w-full h-12 rounded-lg border px-4 text-sm bg-background focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all ${errors.targetPrice ? "border-destructive" : "border-input"}`}
                 />
                 {errors.targetPrice && <p className="text-xs text-destructive mt-1">{errors.targetPrice}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1.5">Destination Country</label>
+                <label htmlFor="destination" className="block text-sm font-medium text-muted-foreground mb-1.5">Destination Country</label>
                 <input
+                  id="destination"
                   type="text"
                   value={formData.destinationCountry}
                   onChange={(e) => update("destinationCountry", e.target.value)}
                   placeholder="United States"
-                  className="w-full rounded-lg border border-input px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                  className="w-full h-12 rounded-lg border border-input px-4 text-sm bg-background focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1.5">
+              <label htmlFor="phoneNumber" className="block text-sm font-medium text-muted-foreground mb-1.5">
                 WhatsApp / Phone Number <span className="text-destructive">*</span>
               </label>
               <input
+                id="phoneNumber"
                 type="tel"
                 value={formData.phoneNumber}
                 onChange={(e) => { update("phoneNumber", e.target.value); clearError("phoneNumber"); }}
                 placeholder="+1 234 567 8900"
-                className={`w-full rounded-lg border px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all ${errors.phoneNumber ? "border-destructive" : "border-input"}`}
+                className={`w-full h-12 rounded-lg border px-4 text-sm bg-background focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all ${errors.phoneNumber ? "border-destructive" : "border-input"}`}
               />
               {errors.phoneNumber && <p className="text-xs text-destructive mt-1">{errors.phoneNumber}</p>}
               <p className="text-xs text-muted-foreground mt-1.5">
@@ -374,33 +396,31 @@ export default function NewRequestPage() {
               <p className="text-xs text-destructive">{errors.serviceType}</p>
             )}
             <div className="grid grid-cols-1 gap-4">
-              {SERVICE_TYPES.map(({ id, label, description, icon: Icon, color }) => {
+              {SERVICE_TYPES.map(({ id, label, description, icon: Icon }) => {
                 const selected = formData.serviceType === id;
-                const colorMap: Record<string, { ring: string; bg: string; icon: string; border: string }> = {
-                  blue: { ring: "ring-blue-500/40", bg: "bg-blue-50", icon: "text-blue-600", border: "border-blue-500" },
-                  emerald: { ring: "ring-emerald-500/40", bg: "bg-emerald-50", icon: "text-emerald-600", border: "border-emerald-500" },
-                  purple: { ring: "ring-purple-500/40", bg: "bg-purple-50", icon: "text-purple-600", border: "border-purple-500" },
-                };
-                const c = colorMap[color];
                 return (
                   <button
                     key={id}
                     type="button"
                     onClick={() => { update("serviceType", id); setErrors({}); }}
-                    className={`flex items-start gap-4 w-full text-left rounded-xl border-2 p-5 transition-all ${
-                      selected ? `${c.border} ring-4 ${c.ring}` : "border-border hover:border-muted-foreground/30"
+                    className={`relative flex items-start gap-4 w-full text-left rounded-xl border-2 p-5 transition-all ${
+                      selected
+                        ? "border-accent ring-4 ring-accent/20"
+                        : "border-border hover:border-muted-foreground/30 hover:-translate-y-0.5 hover:shadow-elevation-1"
                     }`}
                   >
-                    <div className={`h-11 w-11 rounded-xl ${c.bg} flex items-center justify-center shrink-0 mt-0.5`}>
-                      <Icon className={`h-5 w-5 ${c.icon}`} />
+                    <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
+                      selected ? "bg-accent/10" : "bg-muted"
+                    }`}>
+                      <Icon className={`h-5 w-5 ${selected ? "text-accent" : "text-muted-foreground"}`} />
                     </div>
                     <div className="flex-1">
                       <p className="font-semibold text-foreground">{label}</p>
                       <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
                     </div>
                     {selected && (
-                      <div className={`h-5 w-5 rounded-full ${c.bg} flex items-center justify-center shrink-0 mt-0.5`}>
-                        <Check className={`h-3 w-3 ${c.icon}`} />
+                      <div className="absolute top-3 right-3 h-6 w-6 rounded-full bg-accent flex items-center justify-center">
+                        <Check className="h-3.5 w-3.5 text-accent-foreground" />
                       </div>
                     )}
                   </button>
@@ -416,34 +436,24 @@ export default function NewRequestPage() {
             <h2 className="text-lg font-semibold">Review & Submit</h2>
 
             {/* Review summary */}
-            <div className="rounded-xl bg-muted/50 border border-border p-4 space-y-3">
+            <div className="rounded-xl bg-muted/30 p-5 space-y-3">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Summary</p>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-2.5 text-sm">
-                <div>
-                  <p className="text-muted-foreground text-xs">Product</p>
-                  <p className="font-medium truncate">{formData.productName}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">Service</p>
-                  <p className="font-medium">{serviceInfo?.label ?? "—"}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">Quantity</p>
-                  <p className="font-medium">{parseInt(formData.quantity).toLocaleString()} units</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">Target Price</p>
-                  <p className="font-medium">
-                    {formData.targetPrice ? formatCurrency(parseFloat(formData.targetPrice)) : "Not specified"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">Destination</p>
-                  <p className="font-medium">{formData.destinationCountry || "Not specified"}</p>
-                </div>
+              <div className="space-y-2.5">
+                {[
+                  { label: "Product", value: formData.productName },
+                  { label: "Service", value: serviceInfo?.label ?? "—" },
+                  { label: "Quantity", value: `${parseInt(formData.quantity).toLocaleString()} units` },
+                  { label: "Target Price", value: formData.targetPrice ? formatCurrency(parseFloat(formData.targetPrice)) : "Not specified" },
+                  { label: "Destination", value: formData.destinationCountry || "Not specified" },
+                ].map(({ label, value }, i) => (
+                  <div key={label} className={`flex items-center justify-between text-sm py-2 ${i > 0 ? "border-t border-border" : ""}`}>
+                    <span className="text-muted-foreground">{label}</span>
+                    <span className="font-medium">{value}</span>
+                  </div>
+                ))}
               </div>
               {formData.description && (
-                <div className="pt-2 border-t border-border">
+                <div className="pt-3 border-t border-border">
                   <p className="text-muted-foreground text-xs mb-1">Description</p>
                   <p className="text-sm line-clamp-3">{formData.description}</p>
                 </div>
@@ -451,7 +461,7 @@ export default function NewRequestPage() {
             </div>
 
             {/* Section A: Product Images */}
-            <div className="rounded-xl border border-border p-4 space-y-3">
+            <div className="rounded-xl border border-border p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ImageIcon className="h-4 w-4 text-muted-foreground" />
@@ -475,12 +485,12 @@ export default function NewRequestPage() {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="inline-flex items-center gap-2 rounded-lg border border-dashed border-border px-4 py-2.5 text-sm font-medium text-muted-foreground hover:border-primary hover:text-primary transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                  className="w-full rounded-xl border-2 border-dashed border-accent/40 px-4 py-6 text-sm font-medium text-muted-foreground hover:border-accent hover:text-accent hover:bg-accent/5 transition-all disabled:opacity-50 disabled:pointer-events-none flex flex-col items-center gap-2"
                 >
                   {uploading ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" /> Uploading…</>
+                    <><Loader2 className="h-5 w-5 animate-spin" /> Uploading…</>
                   ) : (
-                    <><Upload className="h-4 w-4" /> Upload Image</>
+                    <><Upload className="h-5 w-5" /> Click to upload images</>
                   )}
                 </button>
               )}
@@ -490,7 +500,7 @@ export default function NewRequestPage() {
               {uploadedImages.length > 0 && (
                 <div className="flex flex-wrap gap-3 pt-1">
                   {uploadedImages.map((url, i) => (
-                    <div key={i} className="relative shrink-0">
+                    <div key={i} className="relative shrink-0 group">
                       <img
                         src={url}
                         alt={`Product image ${i + 1}`}
@@ -499,7 +509,7 @@ export default function NewRequestPage() {
                       <button
                         type="button"
                         onClick={() => removeUploadedImage(i)}
-                        className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-white flex items-center justify-center shadow-sm"
+                        className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-white flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
                         aria-label="Remove image"
                       >
                         <X className="h-3 w-3" />
@@ -511,7 +521,7 @@ export default function NewRequestPage() {
             </div>
 
             {/* Section B: Reference Links */}
-            <div className="rounded-xl border border-border p-4 space-y-3">
+            <div className="rounded-xl border border-border p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Link2 className="h-4 w-4 text-muted-foreground" />
@@ -529,12 +539,12 @@ export default function NewRequestPage() {
                     onChange={(e) => { setLinkInput(e.target.value); setLinkError(""); }}
                     onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addLink())}
                     placeholder="https://alibaba.com/product..."
-                    className={`flex-1 rounded-lg border px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all ${linkError ? "border-destructive" : "border-input"}`}
+                    className={`flex-1 h-12 rounded-lg border px-4 text-sm bg-background focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all ${linkError ? "border-destructive" : "border-input"}`}
                   />
                   <button
                     type="button"
                     onClick={addLink}
-                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2.5 bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-all shrink-0"
+                    className="inline-flex items-center gap-1.5 rounded-lg px-4 h-12 bg-accent text-accent-foreground text-sm font-medium hover:opacity-90 btn-press transition-all shrink-0"
                   >
                     <Plus className="h-4 w-4" /> Add
                   </button>
@@ -552,7 +562,7 @@ export default function NewRequestPage() {
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 truncate text-muted-foreground hover:text-primary transition-colors"
+                        className="flex-1 truncate text-muted-foreground hover:text-accent transition-colors"
                       >
                         {url}
                       </a>
@@ -560,6 +570,7 @@ export default function NewRequestPage() {
                         type="button"
                         onClick={() => removeLink(i)}
                         className="text-muted-foreground hover:text-destructive ml-1 shrink-0"
+                        aria-label="Remove link"
                       >
                         <X className="h-3.5 w-3.5" />
                       </button>
@@ -571,13 +582,14 @@ export default function NewRequestPage() {
 
             {/* Notes */}
             <div>
-              <label className="block text-sm font-medium mb-1.5">Additional Notes</label>
+              <label htmlFor="notes" className="block text-sm font-medium text-muted-foreground mb-1.5">Additional Notes</label>
               <textarea
+                id="notes"
                 value={formData.notes}
                 onChange={(e) => update("notes", e.target.value)}
                 placeholder="Any special requirements, deadlines, certifications, packaging instructions…"
                 rows={4}
-                className="w-full rounded-lg border border-input px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+                className="w-full rounded-lg border border-input px-4 py-3 text-sm bg-background focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 resize-none transition-all"
               />
               {errors.notes && <p className="text-xs text-destructive mt-1">{errors.notes}</p>}
             </div>
@@ -590,7 +602,7 @@ export default function NewRequestPage() {
             type="button"
             onClick={() => setStep((s) => s - 1)}
             disabled={step === 1}
-            className="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium border border-border hover:bg-muted/50 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium border border-border hover:bg-muted/50 disabled:opacity-40 disabled:pointer-events-none btn-press transition-colors"
           >
             <ChevronLeft className="h-4 w-4" /> Back
           </button>
@@ -601,7 +613,7 @@ export default function NewRequestPage() {
             <button
               type="button"
               onClick={handleNext}
-              className="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-all"
+              className="inline-flex items-center gap-1.5 rounded-lg px-5 py-2.5 text-sm font-semibold bg-accent text-accent-foreground hover:opacity-90 btn-press transition-all"
             >
               Continue <ChevronRight className="h-4 w-4" />
             </button>
@@ -610,7 +622,7 @@ export default function NewRequestPage() {
               type="button"
               onClick={handleSubmit}
               disabled={submitting}
-              className="inline-flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-60 disabled:pointer-events-none transition-all"
+              className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold bg-accent text-accent-foreground hover:opacity-90 disabled:opacity-60 disabled:pointer-events-none btn-press transition-all"
             >
               {submitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</> : <>Submit Request <Check className="h-4 w-4" /></>}
             </button>

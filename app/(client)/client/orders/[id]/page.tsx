@@ -2,6 +2,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { StatusBadge } from "@/components/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   ShieldCheck, CreditCard, Banknote, Cog, Truck, PackageCheck,
@@ -73,13 +74,11 @@ export default async function ClientOrderDetailPage({
           <h1 className="text-2xl font-bold">Order #{order.id.slice(-8).toUpperCase()}</h1>
           <p className="text-muted-foreground mt-1">{order.request.productName}</p>
         </div>
-        <span className="self-start inline-flex items-center rounded-full bg-primary/10 text-primary px-3 py-1 text-sm font-semibold">
-          {order.status.replace(/_/g, " ")}
-        </span>
+        <StatusBadge status={order.status} />
       </div>
 
-      {/* ── TOP: Order Summary ── */}
-      <Card>
+      {/* Order Summary */}
+      <Card className="border-0 shadow-elevation-1">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Package className="h-4 w-4 text-primary" /> Order Summary
@@ -134,8 +133,8 @@ export default async function ClientOrderDetailPage({
         </CardContent>
       </Card>
 
-      {/* ── MIDDLE: Status Timeline ── */}
-      <Card>
+      {/* Status Timeline */}
+      <Card className="border-0 shadow-elevation-1">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Order Progress</CardTitle>
         </CardHeader>
@@ -150,16 +149,16 @@ export default async function ClientOrderDetailPage({
                 <div key={stage.key} className="flex items-center gap-3">
                   <div className="flex flex-col items-center">
                     <div className={`h-9 w-9 rounded-full flex items-center justify-center border-2 shrink-0 transition-all
-                      ${isDone    ? "bg-emerald-500 border-emerald-500 text-white" : ""}
-                      ${isCurrent ? "bg-[#c9a84c] border-[#c9a84c] text-white" : ""}
+                      ${isDone    ? "bg-primary border-primary text-primary-foreground" : ""}
+                      ${isCurrent ? "bg-primary border-primary text-primary-foreground animate-pulse-ring" : ""}
                       ${idx > currentIdx ? "bg-background border-border text-muted-foreground" : ""}
                     `}>
                       <Icon className="h-4 w-4" />
                     </div>
-                    {idx < STAGES.length - 1 && <div className={`w-0.5 h-5 ${isDone ? "bg-emerald-500" : "bg-border"}`} />}
+                    {idx < STAGES.length - 1 && <div className={`w-0.5 h-5 ${isDone ? "bg-primary" : "bg-border"}`} />}
                   </div>
                   <span className={`text-sm font-medium
-                    ${isDone ? "text-emerald-600" : isCurrent ? "text-[#c9a84c]" : "text-muted-foreground"}
+                    ${isDone ? "text-primary" : isCurrent ? "text-primary font-semibold" : "text-muted-foreground"}
                   `}>{stage.label}</span>
                 </div>
               );
@@ -171,7 +170,7 @@ export default async function ClientOrderDetailPage({
             {/* Connector line */}
             <div className="absolute top-5 left-5 right-5 h-0.5 bg-border z-0" />
             <div
-              className="absolute top-5 left-5 h-0.5 bg-emerald-500 z-0 transition-all duration-500"
+              className="absolute top-5 left-5 h-0.5 bg-primary z-0 transition-all duration-500"
               style={{ width: currentIdx > 0 ? `${(currentIdx / (STAGES.length - 1)) * (100 - (10 / STAGES.length))}%` : "0%" }}
             />
 
@@ -183,14 +182,14 @@ export default async function ClientOrderDetailPage({
               return (
                 <div key={stage.key} className="relative z-10 flex flex-col items-center gap-2" style={{ width: `${100 / STAGES.length}%` }}>
                   <div className={`h-10 w-10 rounded-full flex items-center justify-center border-2 transition-all
-                    ${isDone    ? "bg-emerald-500 border-emerald-500 text-white" : ""}
-                    ${isCurrent ? "bg-[#c9a84c] border-[#c9a84c] text-white shadow-lg scale-110" : ""}
+                    ${isDone    ? "bg-primary border-primary text-primary-foreground" : ""}
+                    ${isCurrent ? "bg-primary border-primary text-primary-foreground shadow-lg scale-110 animate-pulse-ring" : ""}
                     ${isUpcoming ? "bg-background border-border text-muted-foreground" : ""}
                   `}>
                     <Icon className="h-4 w-4" />
                   </div>
                   <span className={`text-xs text-center leading-tight font-medium
-                    ${isDone ? "text-emerald-600" : isCurrent ? "text-[#c9a84c]" : "text-muted-foreground"}
+                    ${isDone ? "text-primary" : isCurrent ? "text-primary font-semibold" : "text-muted-foreground"}
                   `}>{stage.label}</span>
                 </div>
               );

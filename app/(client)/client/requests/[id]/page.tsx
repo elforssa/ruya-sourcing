@@ -21,7 +21,8 @@ import {
   ExternalLink,
   History,
 } from "lucide-react";
-import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import { StatusBadge } from "@/components/StatusBadge";
 import QuotationActions from "./QuotationActions";
 
 const TIMELINE_STEPS = [
@@ -151,23 +152,19 @@ export default async function RequestDetailPage({
               )}
             </div>
           </div>
-          <span
-            className={`inline-flex items-center self-start rounded-full px-3 py-1 text-sm font-semibold ${getStatusColor(request.status)}`}
-          >
-            {request.status.replace(/_/g, " ")}
-          </span>
+          <StatusBadge status={request.status} />
         </div>
       </div>
 
       {/* Status timeline */}
-      <Card>
+      <Card className="border-0 shadow-elevation-1">
         <CardContent className="pt-6">
           <StatusTimeline current={request.status} />
         </CardContent>
       </Card>
 
-      {/* Request Details — full width */}
-      <Card>
+      {/* Request Details */}
+      <Card className="border-0 shadow-elevation-1">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Package className="h-4 w-4 text-muted-foreground" /> Request Details
@@ -238,9 +235,9 @@ export default async function RequestDetailPage({
         </CardContent>
       </Card>
 
-      {/* Quotation section — full width, always visible */}
+      {/* Quotation */}
       {quotation ? (
-        <Card className="border-2 border-primary/20 bg-primary/5">
+        <Card className="border-0 border-t-4 border-t-accent shadow-elevation-1">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
@@ -249,9 +246,7 @@ export default async function RequestDetailPage({
               </CardTitle>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">v{quotation.version}</span>
-                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusColor(quotation.status)}`}>
-                  {quotation.status.replace(/_/g, " ")}
-                </span>
+                <StatusBadge status={quotation.status} size="sm" />
               </div>
             </div>
           </CardHeader>
@@ -342,7 +337,7 @@ export default async function RequestDetailPage({
           </CardContent>
         </Card>
       ) : (
-        <Card>
+        <Card className="border-0 shadow-elevation-1">
           <CardContent className="flex flex-col items-center justify-center py-14 text-center">
             <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center mb-4">
               <Clock className="h-7 w-7 text-muted-foreground" />
@@ -363,7 +358,7 @@ export default async function RequestDetailPage({
 
       {/* Previous quotation versions */}
       {previousVersions.length > 0 && (
-        <Card>
+        <Card className="border-0 shadow-elevation-1">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <History className="h-4 w-4 text-muted-foreground" />
@@ -380,9 +375,7 @@ export default async function RequestDetailPage({
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground">{formatDate(q.createdAt)}</span>
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${getStatusColor(q.status)}`}>
-                      {q.status.replace(/_/g, " ")}
-                    </span>
+                    <StatusBadge status={q.status} size="sm" />
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-3 text-xs">

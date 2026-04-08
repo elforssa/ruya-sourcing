@@ -5,6 +5,7 @@ import { signOut } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Mail, RefreshCw, LogOut, CheckCircle2, Loader2, ArrowLeft } from "lucide-react";
+import { AuthLayout } from "@/components/auth-layout";
 
 function VerifyPendingContent() {
   const searchParams = useSearchParams();
@@ -33,112 +34,57 @@ function VerifyPendingContent() {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-4"
-      style={{ background: "linear-gradient(135deg, #071526 0%, #0B1F3B 50%, #0F2744 100%)" }}
-    >
-      <div className="w-full max-w-md">
-
-        {/* Logo */}
-        <div className="text-center mb-10">
-          <div
-            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-5"
-            style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)" }}
-          >
-            <span className="text-2xl font-bold" style={{ color: "#C9A84C" }}>R</span>
-          </div>
-          <h1
-            className="text-5xl font-bold tracking-[0.3em]"
-            style={{ color: "#C9A84C", textShadow: "0 0 40px rgba(201,168,76,0.3)" }}
-          >
-            RUYA
-          </h1>
+    <AuthLayout>
+      <div className="text-center">
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-accent/10">
+          <Mail className="h-7 w-7 text-accent" />
         </div>
 
-        {/* Card */}
-        <div
-          className="rounded-2xl p-8 shadow-2xl text-center"
-          style={{
-            background: "rgba(15,39,68,0.8)",
-            border: "1px solid rgba(201,168,76,0.15)",
-            backdropFilter: "blur(10px)",
-          }}
-        >
-          {/* Icon */}
-          <div
-            className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-5"
-            style={{ background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.25)" }}
-          >
-            <Mail className="w-7 h-7" style={{ color: "#C9A84C" }} />
+        <h1 className="mb-2 text-xl font-bold text-foreground">Check your email</h1>
+        <p className="mb-1 text-sm text-muted-foreground">
+          We sent a verification link to
+        </p>
+        {email ? (
+          <p className="mb-6 text-sm font-semibold text-accent">{email}</p>
+        ) : (
+          <p className="mb-6 text-sm text-muted-foreground">your email address.</p>
+        )}
+        <p className="mb-6 text-xs text-muted-foreground">
+          Click the link in the email to activate your RUYA account. Check your spam folder if you don&apos;t see it.
+        </p>
+
+        {status === "sent" && (
+          <div className="mb-5 flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
+            Verification email sent! Check your inbox.
           </div>
+        )}
 
-          <h2 className="text-xl font-bold text-white mb-2">Check your email</h2>
-          <p className="text-sm mb-1" style={{ color: "rgba(255,255,255,0.5)" }}>
-            We sent a verification link to
-          </p>
-          {email ? (
-            <p className="text-sm font-semibold mb-6" style={{ color: "#C9A84C" }}>
-              {email}
-            </p>
+        {status === "error" && (
+          <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {errorMsg}
+          </div>
+        )}
+
+        <button
+          onClick={resend}
+          disabled={status === "sending" || status === "sent"}
+          className="btn-press flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-accent text-sm font-bold text-accent-foreground transition-all hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {status === "sending" ? (
+            <><Loader2 className="h-4 w-4 animate-spin" /> Sending...</>
+          ) : status === "sent" ? (
+            <><CheckCircle2 className="h-4 w-4" /> Email sent</>
           ) : (
-            <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
-              your email address.
-            </p>
+            <><RefreshCw className="h-4 w-4" /> Resend verification email</>
           )}
-          <p className="text-xs mb-6" style={{ color: "rgba(255,255,255,0.35)" }}>
-            Click the link in the email to activate your RUYA account. Check your spam folder if you don&apos;t see it.
-          </p>
+        </button>
 
-          {/* Success state */}
-          {status === "sent" && (
-            <div
-              className="flex items-center gap-2 justify-center rounded-lg px-4 py-3 mb-5 text-sm"
-              style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", color: "#86efac" }}
-            >
-              <CheckCircle2 className="h-4 w-4 shrink-0" />
-              Verification email sent! Check your inbox.
-            </div>
-          )}
-
-          {/* Error state */}
-          {status === "error" && (
-            <div
-              className="rounded-lg px-4 py-3 mb-5 text-sm"
-              style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", color: "#fca5a5" }}
-            >
-              {errorMsg}
-            </div>
-          )}
-
-          {/* Resend button */}
-          <button
-            onClick={resend}
-            disabled={status === "sending" || status === "sent"}
-            className="w-full rounded-lg py-3 text-sm font-bold tracking-wider uppercase transition-all mb-4 flex items-center justify-center gap-2"
-            style={{
-              background: status === "sent" ? "rgba(201,168,76,0.3)" : "#C9A84C",
-              color: status === "sent" ? "rgba(11,31,59,0.5)" : "#0B1F3B",
-              cursor: status === "sending" || status === "sent" ? "not-allowed" : "pointer",
-              boxShadow: status === "sent" ? "none" : "0 4px 20px rgba(201,168,76,0.3)",
-            }}
-          >
-            {status === "sending" ? (
-              <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</>
-            ) : status === "sent" ? (
-              <><CheckCircle2 className="h-4 w-4" /> Email sent</>
-            ) : (
-              <><RefreshCw className="h-4 w-4" /> Resend verification email</>
-            )}
-          </button>
-
-          {/* Secondary action */}
+        <div className="mt-5">
           {fromRegister ? (
             <Link
               href="/auth/register"
-              className="inline-flex items-center gap-1.5 text-sm transition-colors"
-              style={{ color: "rgba(255,255,255,0.35)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.65)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               Wrong email? Go back
@@ -146,22 +92,15 @@ function VerifyPendingContent() {
           ) : (
             <button
               onClick={() => signOut({ callbackUrl: "/auth/login" })}
-              className="inline-flex items-center gap-1.5 text-sm transition-colors"
-              style={{ color: "rgba(255,255,255,0.35)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.65)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <LogOut className="h-3.5 w-3.5" />
               Wrong email? Sign out
             </button>
           )}
         </div>
-
-        <p className="text-center mt-6 text-xs" style={{ color: "rgba(255,255,255,0.15)" }}>
-          © {new Date().getFullYear()} RUYA. All rights reserved.
-        </p>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
 
