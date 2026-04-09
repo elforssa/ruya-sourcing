@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     where: { email: email.toLowerCase() },
   });
 
-  if (user) {
+  if (user && user.emailVerified) {
     const COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
     const TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour (matches expiry below)
     if (
