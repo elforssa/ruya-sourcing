@@ -128,7 +128,7 @@ export default async function AgentRequestDetailPage({
               {request.description && (
                 <div className="pt-3 border-t border-border">
                   <p className="text-xs text-muted-foreground mb-1">Description</p>
-                  <p className="text-sm whitespace-pre-line leading-relaxed">{request.description}</p>
+                  <p className="text-sm whitespace-pre-line leading-relaxed break-all">{request.description}</p>
                 </div>
               )}
 

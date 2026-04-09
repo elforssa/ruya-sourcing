@@ -40,7 +40,7 @@ export default async function AgentRequestsPage() {
       ) : (
         <div className="grid gap-4">
           {requests.map((req) => (
-            <Card key={req.id} className="border-0 border-l-[3px] border-l-transparent shadow-elevation-1 transition-all hover:border-l-accent hover:shadow-elevation-2">
+            <Card key={req.id} className="min-w-0 overflow-hidden border-0 border-l-[3px] border-l-transparent shadow-elevation-1 transition-all hover:border-l-accent hover:shadow-elevation-2">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div>
@@ -61,7 +61,7 @@ export default async function AgentRequestsPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">{req.description}</p>
+                <p className="mb-4 line-clamp-2 text-sm text-muted-foreground break-all">{req.description}</p>
                 <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4 sm:gap-4">
                   <div>
                     <p className="text-xs text-muted-foreground">Service</p>

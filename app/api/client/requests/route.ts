@@ -44,6 +44,9 @@ export async function POST(req: NextRequest) {
   if (!serviceType) {
     return NextResponse.json({ error: "Service type is required" }, { status: 400 });
   }
+  if (!destinationCountry?.trim()) {
+    return NextResponse.json({ error: "Destination country is required" }, { status: 400 });
+  }
   if (!phoneNumber?.trim()) {
     return NextResponse.json({ error: "Phone number is required" }, { status: 400 });
   }

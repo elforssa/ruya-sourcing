@@ -202,7 +202,7 @@ export default async function RequestDetailPage({
           {request.description && (
             <div className="pt-3 border-t border-border">
               <p className="text-xs text-muted-foreground mb-1">Description</p>
-              <p className="text-sm whitespace-pre-line">{request.description}</p>
+              <p className="text-sm whitespace-pre-line break-all">{request.description}</p>
             </div>
           )}
 

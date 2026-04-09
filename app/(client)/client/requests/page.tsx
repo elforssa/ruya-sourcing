@@ -57,7 +57,7 @@ export default async function ClientRequestsPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">{req.description}</p>
+                  <p className="mb-4 line-clamp-2 text-sm text-muted-foreground break-all">{req.description}</p>
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
                       <p className="text-xs text-muted-foreground">Quantity</p>

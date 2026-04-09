@@ -97,6 +97,8 @@ export default function NewRequestPage() {
       e.quantity = "Enter a valid quantity (min 1).";
     if (formData.targetPrice && isNaN(parseFloat(formData.targetPrice)))
       e.targetPrice = "Enter a valid price.";
+    if (!formData.destinationCountry.trim())
+      e.destinationCountry = "Destination country is required.";
     if (!formData.phoneNumber.trim())
       e.phoneNumber = "Phone number is required.";
     else if (formData.phoneNumber.trim().length < 10)
@@ -355,15 +357,18 @@ export default function NewRequestPage() {
                 {errors.targetPrice && <p className="text-xs text-destructive mt-1">{errors.targetPrice}</p>}
               </div>
               <div>
-                <label htmlFor="destination" className="block text-sm font-medium text-muted-foreground mb-1.5">Destination Country</label>
+                <label htmlFor="destination" className="block text-sm font-medium text-muted-foreground mb-1.5">
+                  Destination Country <span className="text-destructive">*</span>
+                </label>
                 <input
                   id="destination"
                   type="text"
                   value={formData.destinationCountry}
-                  onChange={(e) => update("destinationCountry", e.target.value)}
+                  onChange={(e) => { update("destinationCountry", e.target.value); clearError("destinationCountry"); }}
                   placeholder="United States"
-                  className="w-full h-12 rounded-lg border border-input px-4 text-sm bg-background focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
+                  className={`w-full h-12 rounded-lg border px-4 text-sm bg-background focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all ${errors.destinationCountry ? "border-destructive" : "border-input"}`}
                 />
+                {errors.destinationCountry && <p className="text-xs text-destructive mt-1">{errors.destinationCountry}</p>}
               </div>
             </div>
 
